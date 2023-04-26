@@ -63,7 +63,7 @@ class DrugCartDevice(var activity: Activity){
     }
 
     fun unlock(loggerId: Int) {
-        Log.i(TAG, "unlockLogger: $loggerId")
+        Log.i(TAG, "unlockLocker: $loggerId")
         if (characteristic == null || gatt == null || loggerId >= cmdUnlockList.size) {
             return
         }
