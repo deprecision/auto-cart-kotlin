@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "492337965117",
+    "project_id": "smartcartmedicine",
+    "storage_bucket": "smartcartmedicine.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492337965117:android:56691bad8957463b4e6254",
+        "android_client_info": {
+          "package_name": "com.example.smartdrugcart"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "492337965117-1hms9m1vnpg8hdnfu70dqfovjhbiun75.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.smartdrugcart",
+            "certificate_hash": "4dcdd44b9e5117982165f3bb4716df5ba34202ea"
+          }
+        },
+        {
+          "client_id": "492337965117-5jrhqb6m9r5fr5gpd1fih6vhbd06534b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgwpZFpiI174q3HV_u_J7W4XplbaCVbH8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "492337965117-5jrhqb6m9r5fr5gpd1fih6vhbd06534b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
