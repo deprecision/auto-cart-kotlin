@@ -4,7 +4,7 @@ import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.view.Window
-import com.example.smartdrugcart.databinding.DialogClearLoggerBinding
+import com.example.smartdrugcart.databinding.DialogClearLockerBinding
 
 class ClearLockerDialog(private var activity: Activity): Dialog(activity) {
 
@@ -16,8 +16,8 @@ class ClearLockerDialog(private var activity: Activity): Dialog(activity) {
         this.l = l
     }
 
-    private val binding: DialogClearLoggerBinding by lazy {
-        DialogClearLoggerBinding.inflate(layoutInflater)
+    private val binding: DialogClearLockerBinding by lazy {
+        DialogClearLockerBinding.inflate(layoutInflater)
     }
 
     init {

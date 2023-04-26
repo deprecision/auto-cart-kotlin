@@ -17,8 +17,9 @@ import com.example.smartdrugcart.ScannerActivity
 import com.example.smartdrugcart.SettingActivity
 import com.example.smartdrugcart.databinding.DialogAlarmDisconnectBinding
 import com.example.smartdrugcart.databinding.DialogInputBinding
+import com.example.smartdrugcart.devices.DrugCartDevice
 
-class AlarmDisconnectDialog(private var activity: Activity): Dialog(activity) {
+class AlarmDisconnectDialog(private var activity: Activity, private var device: DrugCartDevice): Dialog(activity) {
 
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
@@ -34,13 +35,30 @@ class AlarmDisconnectDialog(private var activity: Activity): Dialog(activity) {
         setContentView(binding.root)
         window!!.setBackgroundDrawableResource(android.R.color.transparent)
         window!!.setLayout(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
-        setCancelable(true)
+        setCancelable(true) //false
 
         binding.settingLL.setOnClickListener {
-            var intent = Intent(activity, SettingActivity::class.java)
-            activity.startActivity(intent)
+            showPasswordDialog();
         }
 
+        binding.refreshLL.setOnClickListener {
+            Toast.makeText(activity, "reconnected.", Toast.LENGTH_SHORT).show()
+            device.connect()
+        }
+
+    }
+
+    private fun showPasswordDialog(){
+        val dialog = PasswordDialog(activity)
+        dialog.setEvent {
+            if(it == "1111"){
+                var intent = Intent(activity, SettingActivity::class.java)
+                activity.startActivity(intent)
+            }else{
+                Toast.makeText(activity, "invalid password.", Toast.LENGTH_SHORT).show()
+            }
+        }
+        dialog.show()
     }
 
 }

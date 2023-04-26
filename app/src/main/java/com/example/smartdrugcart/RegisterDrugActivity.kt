@@ -11,7 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.healthmessage.database.FunctionsLocker
-import com.example.smartdrugcart.adapters.AdapterLogger
+import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.ActivityRegisterDrugBinding
 import com.example.smartdrugcart.devices.DrugCartDevice
 import com.example.smartdrugcart.dialogs.*
@@ -56,10 +56,8 @@ class RegisterDrugActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
         functions = FunctionsLocker(this)
-        alarmUnlockDialog = AlarmUnlockDialog(this)
-        alarmDisconnectDialog = AlarmDisconnectDialog(this)
         device = DrugCartDevice(this)
-        device.setMyEvent{ event ->
+        device.setMyEvent{ event, data ->
             when(event){
                 DrugCartDevice.STATE_CONNECTED->{
                     binding.stateDeviceTV.text = KEY_CONNECT
@@ -83,6 +81,9 @@ class RegisterDrugActivity : AppCompatActivity() {
                 }
             }
         }
+        alarmUnlockDialog = AlarmUnlockDialog(this)
+        alarmDisconnectDialog = AlarmDisconnectDialog(this, device)
+
         binding.macAddressTV.text = prefs.strMacAddress
         binding.stateDeviceTV.text = KEY_DISSCONNET
         binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
@@ -106,14 +107,14 @@ class RegisterDrugActivity : AppCompatActivity() {
     }
 
     private fun adapter(){
-        val adapter = AdapterLogger(this, this.drawer1List, KEY_MODE_REGISTER)
+        val adapter = AdapterLocker(this, this.drawer1List, KEY_MODE_REGISTER)
         val layoutManager = GridLayoutManager(this, 5, GridLayoutManager.VERTICAL, false)
         adapter.setMyEvent { event, position->
             when(event){
-                AdapterLogger.EVENT_SHOW_INPUTDIALOG->{
+                AdapterLocker.EVENT_SHOW_INPUTDIALOG->{
                     showInputDialog(position)
                 }
-                AdapterLogger.EVENT_SHOW_CLEARDIALOG->{
+                AdapterLocker.EVENT_SHOW_CLEARDIALOG->{
                     showClearDialog(position)
                 }
             }
@@ -121,7 +122,7 @@ class RegisterDrugActivity : AppCompatActivity() {
         binding.drawer1RCV.adapter = adapter
         binding.drawer1RCV.layoutManager = layoutManager
 
-        val adapter2 = AdapterLogger(this, drawer2List, KEY_MODE_PAY)
+        val adapter2 = AdapterLocker(this, drawer2List, "")
         val layoutManager2 = GridLayoutManager(this, 5, GridLayoutManager.VERTICAL, false)
         binding.drawer2RCV.adapter = adapter2
         binding.drawer2RCV.layoutManager = layoutManager2

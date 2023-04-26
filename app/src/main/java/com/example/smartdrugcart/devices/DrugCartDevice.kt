@@ -34,8 +34,8 @@ class DrugCartDevice(var activity: Activity){
         private val UUID_CONTROLLER = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
     }
 
-    private var l: ((event: String) -> Unit?)? = null
-    fun setMyEvent(l: (event: String) -> Unit) {
+    private var l: ((event: String, data: String?) -> Unit?)? = null
+    fun setMyEvent(l: (event: String, data: String?) -> Unit) {
         this.l = l
     }
 
@@ -68,6 +68,7 @@ class DrugCartDevice(var activity: Activity){
             return
         }
 
+        //for test
         var command = ""
         when(loggerId.toString()){
             "1"->{
@@ -97,7 +98,7 @@ class DrugCartDevice(var activity: Activity){
 
         val rootView: View = activity.window.decorView.rootView
         rootView.post {
-            l?.let { it(STATE_UNLOCK_LOGGER) }
+            l?.let { it(STATE_UNLOCK_LOGGER, loggerId.toString()) }
         }
 
         //loop check state of logger
@@ -127,13 +128,13 @@ class DrugCartDevice(var activity: Activity){
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         gatt?.discoverServices()
-                        l?.let { it(STATE_CONNECTED) }
+                        l?.let { it(STATE_CONNECTED, null) }
 
                         Log.i(TAG, "STATE_CONNECTED")
                         Log.i(TAG, "discoverServices")
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
-                        l?.let { it(STATE_DISCONNECTED) }
+                        l?.let { it(STATE_DISCONNECTED, null) }
                         Log.i(TAG, "STATE_DISCONNECTED")
                     }
                 }
@@ -243,7 +244,7 @@ class DrugCartDevice(var activity: Activity){
                                 stateRead = STATE_LOCK_LOGGER
                                 val rootView: View = activity.window.decorView.rootView
                                 rootView.post {
-                                    l?.let { it(STATE_LOCK_LOGGER) }//check value againt
+                                    l?.let { it(STATE_LOCK_LOGGER, null) }//check value againt
                                 }
                             }
                         }

@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.healthmessage.database.FunctionsLocker
-import com.example.smartdrugcart.adapters.AdapterLogger
+import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.ActivityMainBinding
 import com.example.smartdrugcart.devices.DrugCartDevice
 import com.example.smartdrugcart.dialogs.*
@@ -53,9 +53,8 @@ class MainActivity : AppCompatActivity() {
     @SuppressLint("NotifyDataSetChanged")
     override fun onResume() {
         super.onResume()
-        addDataList()
-        binding.drawer1RCV.adapter?.notifyDataSetChanged()
 
+        updateLocker()
         device.connect()
     }
 
@@ -69,9 +68,8 @@ class MainActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
         functions = FunctionsLocker(this)
-        alarmDisconnectDialog = AlarmDisconnectDialog(this)
         device = DrugCartDevice(this)
-        device.setMyEvent{ event ->
+        device.setMyEvent{ event, data ->
             when(event){
                 DrugCartDevice.STATE_CONNECTED->{
                     binding.stateDeviceTV.text = KEY_CONNECT
@@ -86,15 +84,18 @@ class MainActivity : AppCompatActivity() {
                     alarmDisconnectDialog.show()
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
-                    showAlarmUnlockDialog()
-                    Toast.makeText(this, "Logger is unlock.", Toast.LENGTH_SHORT).show()
+                    var lockerId = data!!
+                    showAlarmUnlockDialog(lockerId!!)
+                    Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
                 }
                 DrugCartDevice.STATE_LOCK_LOGGER->{
                     hideAlarmUnlockDialog()
-                    Toast.makeText(this, "Logger is lock.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+        alarmDisconnectDialog = AlarmDisconnectDialog(this, device)
+
         binding.macAddressTV.text = prefs.strMacAddress
         binding.stateDeviceTV.text = KEY_DISSCONNET
         binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
@@ -117,32 +118,32 @@ class MainActivity : AppCompatActivity() {
                 functions.insert(ModelLocker(null, null, KEY_LOCK, 0))
                 drawer1List.addAll(functions.getDataList())
 
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
+                drawer2List.add(ModelLocker(6, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(7, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(8, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(9, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(10, null, KEY_PAUSE, 0))
             }
             else->{
                 drawer1List.addAll(dataList)
 
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-                drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
+                drawer2List.add(ModelLocker(6, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(7, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(8, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(9, null, KEY_PAUSE, 0))
+                drawer2List.add(ModelLocker(10, null, KEY_PAUSE, 0))
             }
         }
-        Log.i(TAG, "loggerList size: " + drawer1List.size)
+        Log.i(TAG, "lockerList size: " + drawer1List.size)
     }
 
     private fun adapter(){
-        val adapter1 = AdapterLogger(this, drawer1List, KEY_MODE_PAY)
+        val adapter1 = AdapterLocker(this, drawer1List, KEY_MODE_PAY)
         val layoutManager = GridLayoutManager(this, 5, GridLayoutManager.VERTICAL, false)
         binding.drawer1RCV.adapter = adapter1
         binding.drawer1RCV.layoutManager = layoutManager
 
-        val adapter2 = AdapterLogger(this, drawer2List, KEY_MODE_PAY)
+        val adapter2 = AdapterLocker(this, drawer2List, "")
         val layoutManager2 = GridLayoutManager(this, 5, GridLayoutManager.VERTICAL, false)
         binding.drawer2RCV.adapter = adapter2
         binding.drawer2RCV.layoutManager = layoutManager2
@@ -156,22 +157,30 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.historyIV.setOnClickListener {
-
+            showAlarmUnlockDialog("1")
         }
 
         binding.registerLL.setOnClickListener {
-            var intent = Intent(this, RegisterDrugActivity::class.java)
-            startActivity(intent)
+            val dialog = RegisterDialog(this, barcodeForResult)
+            dialog.setOnDismissListener {
+                updateLocker()
+            }
+            dialog.show()
         }
 
         binding.payLL.setOnClickListener {
             inputDialog = InputDialog(this, barcodeForResult)
             inputDialog!!.setEvent { hn->
-                openLogger(hn)
+                openLocker(hn)
             }
             inputDialog!!.show()
         }
 
+    }
+
+    private fun updateLocker(){
+        addDataList()
+        binding.drawer1RCV.adapter?.notifyDataSetChanged()
     }
 
     private fun showPasswordDialog(){
@@ -197,16 +206,16 @@ class MainActivity : AppCompatActivity() {
 
             if(data != null){
                 val barcode = data?.getStringExtra("SCAN_RESULT")
-                openLogger(barcode)
+                openLocker(barcode)
 
                 Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
             }else{
-                Toast.makeText(this, "fail", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    private fun openLogger(hn: String?){
+    private fun openLocker(hn: String?){
 
         if(hn == null){
             Toast.makeText(this, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()
@@ -226,7 +235,7 @@ class MainActivity : AppCompatActivity() {
             device?.unlock(model.id!!.toInt())
             inputDialog!!.dismiss()
         }else{
-            Toast.makeText(this, "Not Found", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Not found", Toast.LENGTH_SHORT).show()
         }
 
     }
@@ -252,17 +261,18 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-
-    private fun showAlarmUnlockDialog(){
+    private fun showAlarmUnlockDialog(lockerId: String){
         if(alarmUnlockDialog == null){
             alarmUnlockDialog = AlarmUnlockDialog(this)
-            alarmUnlockDialog!!.setTitle("Logger is unlock")
-            alarmUnlockDialog!!.setSubtitle("Take the pills out of the logger\nand close it to continue.")
-            alarmUnlockDialog!!.setCancelable(false)
+            alarmUnlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_PAY)
             alarmUnlockDialog!!.setOnDismissListener {
                 showClearDialog(positionCurrent)
             }
         }
+        var model = drawer1List.single { it.id == lockerId.toLong() }
+        alarmUnlockDialog!!.setNumber("No.${lockerId}")
+        alarmUnlockDialog!!.setTitle("Locker is unlock")
+        alarmUnlockDialog!!.setSubtitle("HN:${model.hn}")
         alarmUnlockDialog!!.show()
     }
     private fun hideAlarmUnlockDialog(){

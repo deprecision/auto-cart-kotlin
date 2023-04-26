@@ -4,10 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST
@@ -36,6 +38,7 @@ class ScannerActivity : AppCompatActivity() {
         ActivityScannerBinding.inflate(layoutInflater)
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -59,6 +62,7 @@ class ScannerActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun setupCamera() {
 
         cameraSelector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
@@ -84,6 +88,7 @@ class ScannerActivity : AppCompatActivity() {
     private var previewUseCase: Preview? = null
     private var analysisUseCase: ImageAnalysis? = null
     private val screenAspectRatio = 1
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("WrongConstant")
     private fun bindPreviewUseCase() {
         if (cameraProvider == null) {
@@ -121,6 +126,7 @@ class ScannerActivity : AppCompatActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     @SuppressLint("UnsafeOptInUsageError")
     private fun processImageProxy(imageProxy: ImageProxy) {
 
@@ -200,6 +206,7 @@ class ScannerActivity : AppCompatActivity() {
             }
     }
 
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
