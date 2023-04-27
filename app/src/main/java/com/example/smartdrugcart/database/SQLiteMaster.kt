@@ -114,6 +114,22 @@ class FunctionsLocker(private var activity: Activity) {
         return dataList
     }
 
+    fun getDataById(id: String): ModelLocker? {
+
+        val cursor = db!!.rawQuery("Select * from $TABLE_LOCKER where $COL_LOG_ID == ${id};", null)
+        while (cursor.moveToFirst()) {
+
+            val m = ModelLocker()
+            m.id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LOG_ID))
+            m.hn = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(COL_LOG_HN))
+            m.state = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_STATE))
+            m.counter = cursor.getInt(cursor.getColumnIndexOrThrow(COL_LOG_COUNTER))
+
+            return m
+        }
+        return null
+    }
+
 
 }
 

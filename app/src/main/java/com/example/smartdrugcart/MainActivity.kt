@@ -69,25 +69,16 @@ class MainActivity : AppCompatActivity() {
         prefs = Prefs(this)
         functions = FunctionsLocker(this)
         device = DrugCartDevice(this)
-        device.setMyEvent{ event, data ->
+        device.setMyEvent{ event, lockerId ->
             when(event){
                 DrugCartDevice.STATE_CONNECTED->{
-                    binding.stateDeviceTV.text = KEY_CONNECT
-                    binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorGreen))
-                    binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorGreen), PorterDuff.Mode.SRC_ATOP)
-                    alarmDisconnectDialog.dismiss()
+                    updateUI(DrugCartDevice.STATE_CONNECTED)
                 }
                 DrugCartDevice.STATE_DISCONNECTED->{
-                    binding.stateDeviceTV.text = KEY_DISSCONNET
-                    binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
-                    binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
-                    alarmDisconnectDialog.show()
-                    device.connect()
+                    updateUI(DrugCartDevice.STATE_DISCONNECTED)
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
-                    var lockerId = data!!
                     showAlarmUnlockDialog(lockerId!!)
-                    Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
                 }
                 DrugCartDevice.STATE_LOCK_LOGGER->{
                     hideAlarmUnlockDialog()
@@ -104,6 +95,24 @@ class MainActivity : AppCompatActivity() {
         alarmDisconnectDialog.show()
 
 
+    }
+
+    private fun updateUI(status: String){
+        when(status){
+            DrugCartDevice.STATE_CONNECTED->{
+                binding.stateDeviceTV.text = KEY_CONNECT
+                binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorGreen))
+                binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorGreen), PorterDuff.Mode.SRC_ATOP)
+                alarmDisconnectDialog.dismiss()
+            }
+            DrugCartDevice.STATE_DISCONNECTED->{
+                binding.stateDeviceTV.text = KEY_DISSCONNET
+                binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
+                binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
+                alarmDisconnectDialog.show()
+                device.connect()
+            }
+        }
     }
 
     private fun addDataList(){
@@ -269,11 +278,15 @@ class MainActivity : AppCompatActivity() {
                 showClearDialog(positionCurrent)
             }
         }
-        var model = drawer1List.single { it.id == lockerId.toLong() }
-        alarmUnlockDialog!!.setNumber("No.${lockerId}")
-        alarmUnlockDialog!!.setTitle("Locker is unlock")
-        alarmUnlockDialog!!.setSubtitle("HN:${model.hn}")
-        alarmUnlockDialog!!.show()
+
+        if(!alarmUnlockDialog!!.isShowing){
+            var model = drawer1List.single { it.id == lockerId.toLong() }
+            alarmUnlockDialog!!.setNumber("No.${lockerId}")
+            alarmUnlockDialog!!.setTitle("Locker is unlock")
+            alarmUnlockDialog!!.setSubtitle("HN:${model.hn}")
+            alarmUnlockDialog!!.show()
+            Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
+        }
     }
     private fun hideAlarmUnlockDialog(){
         alarmUnlockDialog?.dismiss()

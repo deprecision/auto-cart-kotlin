@@ -14,6 +14,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Hex
 import java.util.*
+import kotlin.time.Duration
 
 class DrugCartDevice(var activity: Activity){
 
@@ -46,7 +47,6 @@ class DrugCartDevice(var activity: Activity){
     private var characteristic: BluetoothGattCharacteristic? = null
 
     private var prefs = Prefs(activity)
-    private var stateRead = STATE_LOCK_LOGGER
     private var position = 0
 
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
@@ -94,24 +94,15 @@ class DrugCartDevice(var activity: Activity){
         }
         // command open logger
         writeCharacteristicCurrent(command)
-        stateRead = STATE_UNLOCK_LOGGER
 
-        val rootView: View = activity.window.decorView.rootView
-        rootView.post {
-            l?.let { it(STATE_UNLOCK_LOGGER, loggerId.toString()) }
-        }
-
-        //loop check state of logger
+        //loop check state of locker delay 0.6 sec
         val handler = Handler(Looper.getMainLooper())
         handler.postDelayed(object : Runnable{
             override fun run() {
-                if (stateRead == STATE_UNLOCK_LOGGER){
-                    val cmdCheckState = "02 F0 32 03 27" //check state all
-                    writeCharacteristicCurrent(cmdCheckState)
-                    handler.postDelayed(this, 500)
-                }
+                val cmdCheckState = "02 F0 32 03 27" //check state all
+                writeCharacteristicCurrent(cmdCheckState)
             }
-        }, 500)
+        }, 600)
     }
 
     fun destroy(){
@@ -217,6 +208,7 @@ class DrugCartDevice(var activity: Activity){
         }
     }
 
+    private var statusCheckConfirmLock = "off"
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         Log.i(TAG, "broadcastUpdate : ${characteristic.uuid}")
 
@@ -232,7 +224,7 @@ class DrugCartDevice(var activity: Activity){
                         "9C"->{
 
                         }
-                        "02"->{
+                        "02"->{//check status locker
                             val hexNumber = "${hexString[9]}${hexString[10]}" // Replace with your hex number
                             val decimalNumber = hexNumber.toInt(16) // Convert hex to decimal
                             val binaryNumber = String.format("%8s", Integer.toBinaryString(decimalNumber)).replace(' ', '0')
@@ -240,13 +232,39 @@ class DrugCartDevice(var activity: Activity){
                             Log.i(TAG, "hexNumber: $hexNumber")
                             Log.i(TAG, "binaryNumber: $binaryNumber")
 
-                            if(binaryNumber[position].toString() == STATE_LOCK){
-                                stateRead = STATE_LOCK_LOGGER
-                                val rootView: View = activity.window.decorView.rootView
-                                rootView.post {
-                                    l?.let { it(STATE_LOCK_LOGGER, null) }//check value againt
+                            val statusCurrentLocker = binaryNumber[position].toString()
+                            when(statusCurrentLocker){
+                                STATE_UNLOCK->{
+
+                                    val rootView: View = activity.window.decorView.rootView
+                                    rootView.post {
+                                        l?.let { it(STATE_UNLOCK_LOGGER, null) }//check value againt
+                                    }
+
+                                    Handler(Looper.getMainLooper()).postDelayed({
+                                            val cmdCheckState = "02 F0 32 03 27" //check state all
+                                            writeCharacteristicCurrent(cmdCheckState)
+                                        }, 1000)
+
+                                    statusCheckConfirmLock = "on"
+                                }
+                                STATE_LOCK->{
+                                    val rootView: View = activity.window.decorView.rootView
+                                    rootView.post {
+                                        l?.let { it(STATE_LOCK_LOGGER, null) }//check value againt
+                                    }
+
+                                    if(statusCheckConfirmLock == "on"){
+                                        Handler(Looper.getMainLooper()).postDelayed({
+                                            val cmdCheckState = "02 F0 32 03 27" //check state all
+                                            writeCharacteristicCurrent(cmdCheckState)
+                                        }, 3000)
+                                    }
+                                    statusCheckConfirmLock = "off"
+
                                 }
                             }
+
                         }
                     }
                 }

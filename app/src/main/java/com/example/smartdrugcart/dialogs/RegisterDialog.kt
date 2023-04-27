@@ -54,6 +54,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         adapter()
         event()
 
+        device.connect()
     }
 
     private fun event(){
@@ -81,6 +82,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
         prefs = Prefs(activity)
         functions = FunctionsLocker(activity)
+
         device = DrugCartDevice(activity)
         device.setMyEvent{ event, lockerId->
             when(event){
@@ -93,20 +95,20 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
                     showLockerUnlockDialog(lockerId!!)
-                    Toast.makeText(activity, "Locker is unlock.", Toast.LENGTH_SHORT).show()
                 }
                 DrugCartDevice.STATE_LOCK_LOGGER->{
                     hideLockerUnlockDialog()
-                    Toast.makeText(activity, "Locker is lock.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
-        alarmUnlockDialog = AlarmUnlockDialog(activity)
-        alarmUnlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
 
         alarmDisconnectDialog = AlarmDisconnectDialog(activity, device)
+        alarmUnlockDialog = AlarmUnlockDialog(activity)
+        alarmUnlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
+        alarmUnlockDialog.setOnDismissListener {
+            showAlarmSuccessDialog()
+        }
 
-        device.connect()
     }
 
     private fun addDataList(){
@@ -151,24 +153,20 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 Toast.makeText(activity, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()
             } else {
                 //OPEN DRAWER
-                if(this.drawer1List.any { it.hn == hn }){
+                if(drawer1List.any { it.hn == hn }){
                     Toast.makeText(activity, "This HN number already exists.", Toast.LENGTH_SHORT).show()
                     dialog.setShowErrorInput(true)
                     return@setEvent
                 }
 
-                this.drawer1List[position].hn = hn
-                this.drawer1List[position].counter = 0
                 //update data
-                functions.update(this.drawer1List[position])
-                //unlock logger
-                device.unlock(this.drawer1List[position].id!!.toInt())
-                //change notify
+                drawer1List[position].hn = hn
+                drawer1List[position].counter = 0
+                functions.update(drawer1List[position])
                 binding.drawer1RCV.adapter?.notifyItemChanged(position)
 
-                alarmUnlockDialog.setTitle("Locker is unlock")
-                alarmUnlockDialog.setSubtitle("Put medicine\nand close it to continue.")
-
+                device.unlock(drawer1List[position].id!!.toInt())//unlock logger
+                alarmUnlockDialog.setSubtitle("Put medicine\nand close it to continue.")//set message is put medicine
                 dialog.dismiss()
             }
         }
@@ -176,7 +174,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
     private fun showClearDialog(position: Int) {
-        var dialog = ClearLockerDialog(activity)
+        val dialog = ClearLockerDialog(activity)
         dialog.setEvent { event ->
             if (event == dialog.EVENT_OK) {
                 this.drawer1List[position].hn = null
@@ -187,10 +185,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 device.unlock(this.drawer1List[position].id!!.toInt())
                 //change notify
                 binding.drawer1RCV.adapter?.notifyItemChanged(position)
-
-                alarmUnlockDialog.setNumber("No.${drawer1List[position].id}")
-                alarmUnlockDialog.setSubtitle("Take the pills out of the logger\nand close it to continue.")
-
+                alarmUnlockDialog.setSubtitle("Take the pills out of the locker\nand close it to continue.")//set message is clear medicine
             }
             dialog.dismiss()
         }
@@ -203,12 +198,23 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
     private fun showLockerUnlockDialog(lockerId: String){
-        val model = drawer1List.single { it.id == lockerId.toLong() }
-        alarmUnlockDialog.setNumber("No.${model.id!!}")
-        alarmUnlockDialog.show()
+
+        if(alarmUnlockDialog.isShowing) return
+
+        val model = functions.getDataById(lockerId)
+        if(model != null){
+            alarmUnlockDialog.setTitle("Locker is unlock")
+            alarmUnlockDialog.setNumber("No.${model.id!!}")
+            alarmUnlockDialog.show()
+            Toast.makeText(activity, "Locker is unlock.", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(activity, "Not found in data", Toast.LENGTH_SHORT).show()
+        }
     }
+
     private fun hideLockerUnlockDialog(){
         alarmUnlockDialog.dismiss()
+        Toast.makeText(activity, "Locker is lock.", Toast.LENGTH_SHORT).show()
     }
 
 }
