@@ -6,9 +6,11 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.util.Log
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -151,6 +153,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 //OPEN DRAWER
                 if(this.drawer1List.any { it.hn == hn }){
                     Toast.makeText(activity, "This HN number already exists.", Toast.LENGTH_SHORT).show()
+                    dialog.setShowErrorInput(true)
                     return@setEvent
                 }
 

@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
                     binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
                     binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
                     alarmDisconnectDialog.show()
+                    device.connect()
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
                     var lockerId = data!!
@@ -157,7 +158,6 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.historyIV.setOnClickListener {
-            showAlarmUnlockDialog("1")
         }
 
         binding.registerLL.setOnClickListener {

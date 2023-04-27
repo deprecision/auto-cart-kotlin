@@ -6,11 +6,9 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.util.Log
+import android.view.View
 import android.view.Window
-import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.smartdrugcart.ScannerActivity
@@ -21,6 +19,17 @@ class InputDialog(private var activity: Activity, private var barcodeForResult: 
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
         this.l = l
+    }
+
+    fun setShowErrorInput(isShow: Boolean){
+        when(isShow){
+            true->{
+                binding.messageTV.visibility = View.VISIBLE
+            }
+            false->{
+                binding.messageTV.visibility = View.GONE
+            }
+        }
     }
 
     private val binding: DialogInputBinding by lazy {
@@ -34,6 +43,8 @@ class InputDialog(private var activity: Activity, private var barcodeForResult: 
         window!!.setLayout(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
         setCancelable(true)
 
+        //init
+        binding.messageTV.visibility = View.GONE
         binding.inputEDT.requestFocus()
 
         binding.okTV.setOnClickListener {
