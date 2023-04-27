@@ -12,9 +12,9 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.smartdrugcart.ScannerActivity
-import com.example.smartdrugcart.databinding.DialogInputBinding
+import com.example.smartdrugcart.databinding.DialogInputHnBinding
 
-class InputDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
+class InputHNDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
 
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
@@ -32,8 +32,19 @@ class InputDialog(private var activity: Activity, private var barcodeForResult: 
         }
     }
 
-    private val binding: DialogInputBinding by lazy {
-        DialogInputBinding.inflate(layoutInflater)
+    fun setUseScanner(isUseScanner: Boolean){
+        when(isUseScanner){
+            true->{
+                binding.scannerIV.visibility = View.VISIBLE
+            }
+            false->{
+                binding.scannerIV.visibility = View.GONE
+            }
+        }
+    }
+
+    private val binding: DialogInputHnBinding by lazy {
+        DialogInputHnBinding.inflate(layoutInflater)
     }
 
     init {

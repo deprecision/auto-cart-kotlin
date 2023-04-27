@@ -25,7 +25,7 @@ class RegisterDrugActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var functions: FunctionsLocker
     //dialogs
-    private lateinit var dialog: InputDialog
+    private lateinit var dialog: InputHNDialog
     private lateinit var alarmUnlockDialog: AlarmUnlockDialog
     private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
     private lateinit var device: DrugCartDevice
@@ -157,7 +157,7 @@ class RegisterDrugActivity : AppCompatActivity() {
 
     private fun showInputDialog(position: Int) {
 
-        var dialog = InputDialog(this, barcodeForResult)
+        var dialog = InputHNDialog(this, barcodeForResult)
         dialog.setEvent { hn ->
             if (hn.isBlank()) {
                 Toast.makeText(this, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()

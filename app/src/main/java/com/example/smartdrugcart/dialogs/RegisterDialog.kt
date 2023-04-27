@@ -6,11 +6,9 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.util.Log
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
@@ -27,7 +25,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     private lateinit var prefs: Prefs
     private lateinit var functions: FunctionsLocker
     //dialogs
-    private lateinit var dialog: InputDialog
+    private lateinit var dialog: InputHNDialog
     private lateinit var alarmUnlockDialog: AlarmUnlockDialog
     private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
     private lateinit var device: DrugCartDevice
@@ -68,16 +66,16 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         }
     }
 
-    private fun barcode() {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(activity,  arrayOf(Manifest.permission.CAMERA), 1001)
-            return
-        }
-
-        val intent = Intent(activity, ScannerActivity::class.java)
-        barcodeForResult.launch(intent)
-
-    }
+//    private fun barcode() {
+//        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
+//            ActivityCompat.requestPermissions(activity,  arrayOf(Manifest.permission.CAMERA), 1001)
+//            return
+//        }
+//
+//        val intent = Intent(activity, ScannerActivity::class.java)
+//        barcodeForResult.launch(intent)
+//
+//    }
 
     private fun init(){
 
@@ -91,6 +89,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 }
                 DrugCartDevice.STATE_DISCONNECTED->{
                     alarmDisconnectDialog.show()
+                    device.connect()
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
                     showLockerUnlockDialog(lockerId!!)
@@ -145,7 +144,8 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
     private fun showInputDialog(position: Int) {
 
-        var dialog = InputDialog(activity, barcodeForResult)
+        val dialog = InputHNDialog(activity, barcodeForResult)
+        dialog.setUseScanner(false)
         dialog.setEvent { hn ->
             if (hn.isBlank()) {
                 Toast.makeText(activity, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()

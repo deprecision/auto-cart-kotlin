@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var functions: FunctionsLocker
     //dialogs
-    private lateinit var inputDialog: InputDialog
+    private lateinit var inputHNDialog: InputHNDialog
     private lateinit var device: DrugCartDevice
     private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
     private var alarmUnlockDialog: AlarmUnlockDialog? = null
@@ -169,11 +169,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.payLL.setOnClickListener {
-            inputDialog = InputDialog(this, barcodeForResult)
-            inputDialog!!.setEvent { hn->
+            inputHNDialog = InputHNDialog(this, barcodeForResult)
+            inputHNDialog!!.setEvent { hn->
                 openLocker(hn)
             }
-            inputDialog!!.show()
+            inputHNDialog!!.show()
         }
 
     }
@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity() {
 
     private val barcodeForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
-            inputDialog?.dismiss()
+            inputHNDialog?.dismiss()
 
             Log.i("daswg3gs", "This is registerForActivityResult.")
 
@@ -233,7 +233,7 @@ class MainActivity : AppCompatActivity() {
             val position = drawer1List.indexOf(model)
             positionCurrent = position
             device?.unlock(model.id!!.toInt())
-            inputDialog!!.dismiss()
+            inputHNDialog!!.dismiss()
         }else{
             Toast.makeText(this, "Not found", Toast.LENGTH_SHORT).show()
         }
