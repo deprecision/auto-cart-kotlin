@@ -27,7 +27,7 @@ class AlarmDisconnectDialog(private var activity: Activity, private var device: 
         setContentView(binding.root)
         window!!.setBackgroundDrawableResource(android.R.color.transparent)
         window!!.setLayout(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
-        setCancelable(true) //false
+        setCancelable(false) //false
 
         binding.settingLL.setOnClickListener {
             showPasswordDialog();

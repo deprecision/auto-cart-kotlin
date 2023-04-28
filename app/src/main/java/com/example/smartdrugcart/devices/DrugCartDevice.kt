@@ -48,6 +48,7 @@ class DrugCartDevice(var activity: Activity){
 
     private var prefs = Prefs(activity)
     private var position = 0
+    private var curentLockerId: String? = null
 
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter = bluetoothManager.adapter
@@ -67,7 +68,7 @@ class DrugCartDevice(var activity: Activity){
         if (characteristic == null || gatt == null || loggerId >= cmdUnlockList.size) {
             return
         }
-
+        curentLockerId = loggerId.toString()
         //for test
         var command = ""
         when(loggerId.toString()){
@@ -238,7 +239,7 @@ class DrugCartDevice(var activity: Activity){
 
                                     val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_UNLOCK_LOGGER, null) }//check value againt
+                                        l?.let { it(STATE_UNLOCK_LOGGER, curentLockerId) }//check value againt
                                     }
 
                                     Handler(Looper.getMainLooper()).postDelayed({
@@ -251,7 +252,7 @@ class DrugCartDevice(var activity: Activity){
                                 STATE_LOCK->{
                                     val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_LOCK_LOGGER, null) }//check value againt
+                                        l?.let { it(STATE_LOCK_LOGGER, curentLockerId) }//check value againt
                                     }
 
                                     if(statusCheckConfirmLock == "on"){

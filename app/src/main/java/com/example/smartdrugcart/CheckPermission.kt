@@ -28,31 +28,28 @@ class CheckPermission : AppCompatActivity() {
         setContentView(binding.root)
         prefs = Prefs(this)
 
-        val intent = Intent(this, MainActivity::class.java)
-        startActivity(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            var permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
+            if (permission != PackageManager.PERMISSION_GRANTED) {
+                Log.i("dwqfqf", "This is Not PERMISSION_GRANTED")
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN), REQUIRE_CODE_PERMISSION_BLUETOOTH)
+            }else{
+                timerCount()
+            }
+        } else {
+            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+            if(bluetoothAdapter == null){
+                Toast.makeText(this, "อุปกรณ์ไม่รองรับ Bluetooth", Toast.LENGTH_SHORT).show()
+                return
+            }
 
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//            var permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
-//            if (permission != PackageManager.PERMISSION_GRANTED) {
-//                Log.i("dwqfqf", "This is Not PERMISSION_GRANTED")
-//                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN), REQUIRE_CODE_PERMISSION_BLUETOOTH)
-//            }else{
-//                timerCount()
-//            }
-//        } else {
-//            val bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-//            if(bluetoothAdapter == null){
-//                Toast.makeText(this, "อุปกรณ์ไม่รองรับ Bluetooth", Toast.LENGTH_SHORT).show()
-//                return
-//            }
-//
-//            if (!bluetoothAdapter.isEnabled) {
-//                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-//                startActivityForResult(enableBtIntent, 1)
-//            } else {
-//                timerCount()
-//            }
-//        }
+            if (!bluetoothAdapter.isEnabled) {
+                val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+                startActivityForResult(enableBtIntent, 1)
+            } else {
+                timerCount()
+            }
+        }
 
     }
 
