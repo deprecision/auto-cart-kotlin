@@ -82,7 +82,6 @@ class RegisterDrugActivity : AppCompatActivity() {
             }
         }
         alarmUnlockDialog = AlarmUnlockDialog(this)
-        alarmDisconnectDialog = AlarmDisconnectDialog(this, device)
 
         binding.macAddressTV.text = prefs.strMacAddress
         binding.stateDeviceTV.text = KEY_DISSCONNET

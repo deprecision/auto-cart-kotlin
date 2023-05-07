@@ -28,7 +28,6 @@ class MainActivity : AppCompatActivity() {
     //dialogs
     private lateinit var inputHNDialog: InputHNDialog
     private lateinit var device: DrugCartDevice
-    private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
     private var alarmUnlockDialog: AlarmUnlockDialog? = null
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
@@ -86,13 +85,14 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        alarmDisconnectDialog = AlarmDisconnectDialog(this, device)
+
 
         binding.macAddressTV.text = prefs.strMacAddress
         binding.stateDeviceTV.text = KEY_DISSCONNET
         binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
         binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
-        alarmDisconnectDialog.show()
+
+        showDisconnectDialog()
 
 
     }
@@ -103,13 +103,13 @@ class MainActivity : AppCompatActivity() {
                 binding.stateDeviceTV.text = KEY_CONNECT
                 binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorGreen))
                 binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorGreen), PorterDuff.Mode.SRC_ATOP)
-                alarmDisconnectDialog.dismiss()
+                hideDisconnectDialog()
             }
             DrugCartDevice.STATE_DISCONNECTED->{
                 binding.stateDeviceTV.text = KEY_DISSCONNET
                 binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
                 binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
-                alarmDisconnectDialog.show()
+                showDisconnectDialog()
                 device.connect()
             }
         }
@@ -167,14 +167,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.historyIV.setOnClickListener {
+
         }
 
         binding.registerLL.setOnClickListener {
-            val dialog = RegisterDialog(this, barcodeForResult)
-            dialog.setOnDismissListener {
-                updateLocker()
-            }
-            dialog.show()
+            showRegisterDialog()
         }
 
         binding.payLL.setOnClickListener {
@@ -185,6 +182,31 @@ class MainActivity : AppCompatActivity() {
             inputHNDialog!!.show()
         }
 
+    }
+
+    private var registerDialog: RegisterDialog? = null
+    private fun showRegisterDialog(){
+        registerDialog = RegisterDialog(this, barcodeRegisterForResult)
+        registerDialog!!.setOnDismissListener {
+            updateLocker()
+        }
+        registerDialog!!.show()
+    }
+    private val barcodeRegisterForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            inputHNDialog?.dismiss()
+
+            val data: Intent? = result.data
+
+            if(data != null){
+                val barcode = data?.getStringExtra("SCAN_RESULT")
+                openLocker(barcode)
+
+                Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
+            }else{
+                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private fun updateLocker(){
@@ -208,8 +230,6 @@ class MainActivity : AppCompatActivity() {
     private val barcodeForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             inputHNDialog?.dismiss()
-
-            Log.i("daswg3gs", "This is registerForActivityResult.")
 
             val data: Intent? = result.data
 
@@ -288,8 +308,21 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
         }
     }
+
     private fun hideAlarmUnlockDialog(){
         alarmUnlockDialog?.dismiss()
+    }
+
+
+    private var disconnectDialog: AlarmDisconnectDialog? = null
+    private fun showDisconnectDialog(){
+        if(disconnectDialog == null){
+            disconnectDialog = AlarmDisconnectDialog(this, device)
+        }
+        disconnectDialog!!.show()
+    }
+    private fun hideDisconnectDialog(){
+        disconnectDialog?.dismiss()
     }
 
 

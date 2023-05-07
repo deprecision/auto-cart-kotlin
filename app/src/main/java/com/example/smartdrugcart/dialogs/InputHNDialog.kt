@@ -32,17 +32,6 @@ class InputHNDialog(private var activity: Activity, private var barcodeForResult
         }
     }
 
-    fun setUseScanner(isUseScanner: Boolean){
-        when(isUseScanner){
-            true->{
-                binding.scannerIV.visibility = View.VISIBLE
-            }
-            false->{
-                binding.scannerIV.visibility = View.GONE
-            }
-        }
-    }
-
     private val binding: DialogInputHnBinding by lazy {
         DialogInputHnBinding.inflate(layoutInflater)
     }
