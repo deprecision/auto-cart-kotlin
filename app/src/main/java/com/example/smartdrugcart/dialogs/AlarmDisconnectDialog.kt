@@ -30,7 +30,7 @@ class AlarmDisconnectDialog(private var activity: Activity, private var device: 
         setCancelable(false) //false
 
         binding.settingLL.setOnClickListener {
-            showPasswordDialog();
+            showPasswordDialog()
         }
 
         binding.refreshLL.setOnClickListener {
