@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var functions: FunctionsLocker
     //dialogs
-    private lateinit var inputHNDialog: InputHNDialog
     private lateinit var device: DrugCartDevice
     private var alarmUnlockDialog: AlarmUnlockDialog? = null
     private val binding: ActivityMainBinding by lazy {
@@ -77,10 +76,10 @@ class MainActivity : AppCompatActivity() {
                     updateUI(DrugCartDevice.STATE_DISCONNECTED)
                 }
                 DrugCartDevice.STATE_UNLOCK_LOGGER->{
-                    showAlarmUnlockDialog(lockerId!!)
+                    showUnlockDialog(lockerId!!)
                 }
                 DrugCartDevice.STATE_LOCK_LOGGER->{
-                    hideAlarmUnlockDialog()
+                    hideUnlockDialog()
                     Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
                 }
             }
@@ -175,23 +174,36 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.payLL.setOnClickListener {
-            inputHNDialog = InputHNDialog(this, barcodeForResult)
-            inputHNDialog!!.setEvent { hn->
-                openLocker(hn)
-            }
-            inputHNDialog!!.show()
+            showInputDialog()
         }
 
+    }
+
+    private var inputHNDialog: InputHNDialog? = null
+    private val barcodeForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            inputHNDialog?.dismiss()
+
+            val data: Intent? = result.data
+            if(data != null){
+                val barcode = data?.getStringExtra("SCAN_RESULT")
+                unlockLocker(barcode)
+                Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
+
+            }else{
+                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    private fun showInputDialog(){
+        inputHNDialog = InputHNDialog(this, barcodeForResult)
+        inputHNDialog!!.setEvent { hn->
+            unlockLocker(hn)
+        }
+        inputHNDialog!!.show()
     }
 
     private var registerDialog: RegisterDialog? = null
-    private fun showRegisterDialog(){
-        registerDialog = RegisterDialog(this, barcodeRegisterForResult)
-        registerDialog!!.setOnDismissListener {
-            updateLocker()
-        }
-        registerDialog!!.show()
-    }
     private val barcodeRegisterForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             inputHNDialog?.dismiss()
@@ -200,7 +212,8 @@ class MainActivity : AppCompatActivity() {
 
             if(data != null){
                 val barcode = data?.getStringExtra("SCAN_RESULT")
-                openLocker(barcode)
+                registerDialog?.setInputHn(barcode!!)
+
 
                 Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
             }else{
@@ -208,6 +221,14 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+    private fun showRegisterDialog(){
+        registerDialog = RegisterDialog(this, barcodeRegisterForResult)
+        registerDialog!!.setOnDismissListener {
+            updateLocker()
+        }
+        registerDialog!!.show()
+    }
+
 
     private fun updateLocker(){
         addDataList()
@@ -227,24 +248,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private val barcodeForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            inputHNDialog?.dismiss()
-
-            val data: Intent? = result.data
-
-            if(data != null){
-                val barcode = data?.getStringExtra("SCAN_RESULT")
-                openLocker(barcode)
-
-                Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
-            }else{
-                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-
-    private fun openLocker(hn: String?){
+    private fun unlockLocker(hn: String?){
 
         if(hn == null){
             Toast.makeText(this, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()
@@ -290,7 +294,7 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    private fun showAlarmUnlockDialog(lockerId: String){
+    private fun showUnlockDialog(lockerId: String){
         if(alarmUnlockDialog == null){
             alarmUnlockDialog = AlarmUnlockDialog(this)
             alarmUnlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_PAY)
@@ -308,8 +312,7 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
         }
     }
-
-    private fun hideAlarmUnlockDialog(){
+    private fun hideUnlockDialog(){
         alarmUnlockDialog?.dismiss()
     }
 

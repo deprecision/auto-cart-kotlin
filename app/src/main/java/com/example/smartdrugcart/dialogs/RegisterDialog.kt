@@ -17,10 +17,10 @@ import com.example.smartdrugcart.*
 import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.DialogRegisterBinding
 import com.example.smartdrugcart.devices.DrugCartDevice
-import com.example.smartdrugcart.helpers.Prefs
 import com.example.smartdrugcart.models.ModelLocker
 
 class RegisterDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
+
 
     private lateinit var functions: FunctionsLocker
     //dialogs
@@ -29,10 +29,17 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     private val drawer1List = ArrayList<ModelLocker>()
     private val drawer2List = ArrayList<ModelLocker>()
 
+    private var lastInputHN: String? = ""
+    private var lastPosition = 0
+
 //    private var l: (()->Unit)? = null
 //    fun setEvent(l: ()->Unit){
 //        this.l = l
 //    }
+    fun setInputHn(hn: String){
+        lastInputHN = hn
+        unlockLocker()
+    }
 
     private val binding: DialogRegisterBinding by lazy {
         DialogRegisterBinding.inflate(layoutInflater)
@@ -59,17 +66,6 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         binding.closeIV.setOnClickListener {
             dismiss()
         }
-    }
-
-    private fun barcode() {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(activity,  arrayOf(Manifest.permission.CAMERA), 1001)
-            return
-        }
-
-        val intent = Intent(activity, ScannerActivity::class.java)
-        barcodeForResult.launch(intent)
-
     }
 
     private fun init(){
@@ -132,7 +128,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
     private fun showInputDialog(position: Int) {
-
+        lastPosition = position
         val dialog = InputHNDialog(activity, barcodeForResult)
         dialog.setEvent { hn ->
             if (hn.isBlank()) {
@@ -144,15 +140,11 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                     dialog.setShowErrorInput(true)
                     return@setEvent
                 }
+                lastInputHN = hn
 
-                //update data
-                drawer1List[position].hn = hn
-                drawer1List[position].counter = 0
-                functions.update(drawer1List[position])
-                binding.drawer1RCV.adapter?.notifyItemChanged(position)
-
-                device.unlock(drawer1List[position].id!!.toInt())//unlock logger
+                unlockLocker()
                 unlockDialog!!.setSubtitle("Put medicine\nand close it to continue.")//set message is put medicine
+
                 dialog.dismiss()
             }
         }
@@ -160,17 +152,14 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
     private fun showClearDialog(position: Int) {
+        lastPosition = position
         val dialog = ClearLockerDialog(activity)
         dialog.setEvent { event ->
             if (event == dialog.EVENT_OK) {
-                this.drawer1List[position].hn = null
-                this.drawer1List[position].counter = 0
-                //update data
-                functions.update(this.drawer1List[position])
+
+                lastInputHN = null
                 //unlock logger
-                device.unlock(this.drawer1List[position].id!!.toInt())
-                //change notify
-                binding.drawer1RCV.adapter?.notifyItemChanged(position)
+                unlockLocker()
                 unlockDialog!!.setSubtitle("Take the pills out of the locker\nand close it to continue.")//set message is clear medicine
             }
             dialog.dismiss()
@@ -178,10 +167,11 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         dialog.show()
     }
 
-    private fun showSuccessDialog(){
-        val dialog = AlarmSuccessDialog(activity)
-        dialog.show()
+    private fun unlockLocker(){
+        val lockerId = drawer1List[lastPosition].id!!.toInt()
+        device.unlock(lockerId)
     }
+
 
 
     private var unlockDialog: AlarmUnlockDialog? = null
@@ -191,6 +181,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
             unlockDialog = AlarmUnlockDialog(activity)
             unlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
             unlockDialog!!.setOnDismissListener {
+                updateData()
                 showSuccessDialog()
                 Toast.makeText(activity, "Locker is lock.", Toast.LENGTH_SHORT).show()
             }
@@ -222,6 +213,22 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
     private fun hideDisconnectDialog(){
         disconnectDialog?.dismiss()
+    }
+
+
+    private fun showSuccessDialog(){
+        val dialog = AlarmSuccessDialog(activity)
+        dialog.show()
+    }
+
+    private fun updateData(){
+        //update data
+        drawer1List[lastPosition].hn = lastInputHN
+        drawer1List[lastPosition].counter = 0
+        functions.update(drawer1List[lastPosition])
+
+        binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+
     }
 
 }
