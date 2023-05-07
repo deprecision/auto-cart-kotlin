@@ -214,7 +214,6 @@ class MainActivity : AppCompatActivity() {
                 val barcode = data?.getStringExtra("SCAN_RESULT")
                 registerDialog?.setInputHn(barcode!!)
 
-
                 Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
             }else{
                 Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
@@ -226,7 +225,6 @@ class MainActivity : AppCompatActivity() {
         registerDialog!!.setOnDismissListener {
             updateLocker()
         }
-        registerDialog!!.show()
     }
 
 

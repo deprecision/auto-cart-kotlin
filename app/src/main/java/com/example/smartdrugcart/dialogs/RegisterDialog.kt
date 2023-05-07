@@ -1,16 +1,16 @@
 package com.example.smartdrugcart.dialogs
 
-import android.Manifest
 import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
-import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.util.Log
 import android.view.Window
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.*
@@ -18,6 +18,12 @@ import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.DialogRegisterBinding
 import com.example.smartdrugcart.devices.DrugCartDevice
 import com.example.smartdrugcart.models.ModelLocker
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.concurrent.schedule
 
 class RegisterDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
 
@@ -36,8 +42,10 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 //    fun setEvent(l: ()->Unit){
 //        this.l = l
 //    }
+
     fun setInputHn(hn: String){
         lastInputHN = hn
+        inputHNDialog!!.dismiss()
         unlockLocker()
     }
 
@@ -45,17 +53,22 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         DialogRegisterBinding.inflate(layoutInflater)
     }
 
+    private var isConnect = false
     init {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(binding.root)
         window!!.setBackgroundDrawableResource(android.R.color.transparent)
         window!!.setLayout(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
         setCancelable(false) //false
+        show()
 
         init()
         addDataList()
         adapter()
         event()
+
+
+        Log.i("dawda", "init")
     }
 
     private fun event(){
@@ -70,11 +83,13 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
     private fun init(){
 
+        initUnlockDialog()
         functions = FunctionsLocker(activity)
         device = DrugCartDevice(activity)
         device.setMyEvent{ event, lockerId->
             when(event){
                 DrugCartDevice.STATE_CONNECTED->{
+                    isConnect = true
                     hideDisconnectDialog()
                 }
                 DrugCartDevice.STATE_DISCONNECTED->{
@@ -89,8 +104,13 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 }
             }
         }
-        showDisconnectDialog()
         device.connect()
+
+        Handler().postDelayed({
+            if(!isConnect){
+                showDisconnectDialog()
+            }
+        }, 1000)
 
     }
 
@@ -127,17 +147,18 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
     }
 
+    private var inputHNDialog: InputHNDialog? = null
     private fun showInputDialog(position: Int) {
         lastPosition = position
-        val dialog = InputHNDialog(activity, barcodeForResult)
-        dialog.setEvent { hn ->
+        inputHNDialog = InputHNDialog(activity, barcodeForResult)
+        inputHNDialog!!.setEvent { hn ->
             if (hn.isBlank()) {
                 Toast.makeText(activity, "ระบุหมายเลข HN", Toast.LENGTH_SHORT).show()
             } else {
                 //OPEN DRAWER
                 if(drawer1List.any { it.hn == hn }){
                     Toast.makeText(activity, "This HN number already exists.", Toast.LENGTH_SHORT).show()
-                    dialog.setShowErrorInput(true)
+                    inputHNDialog!!.setShowErrorInput(true)
                     return@setEvent
                 }
                 lastInputHN = hn
@@ -145,10 +166,10 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 unlockLocker()
                 unlockDialog!!.setSubtitle("Put medicine\nand close it to continue.")//set message is put medicine
 
-                dialog.dismiss()
+                inputHNDialog!!.dismiss()
             }
         }
-        dialog.show()
+        inputHNDialog!!.show()
     }
 
     private fun showClearDialog(position: Int) {
@@ -175,18 +196,16 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
 
     private var unlockDialog: AlarmUnlockDialog? = null
-    private fun showUnlockDialog(lockerId: String){
-
-        if(unlockDialog == null){
-            unlockDialog = AlarmUnlockDialog(activity)
-            unlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
-            unlockDialog!!.setOnDismissListener {
-                updateData()
-                showSuccessDialog()
-                Toast.makeText(activity, "Locker is lock.", Toast.LENGTH_SHORT).show()
-            }
+    private fun initUnlockDialog(){
+        unlockDialog = AlarmUnlockDialog(activity)
+        unlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
+        unlockDialog!!.setOnDismissListener {
+            updateData()
+            showSuccessDialog()
+            Toast.makeText(activity, "Locker is lock.", Toast.LENGTH_SHORT).show()
         }
-
+    }
+    private fun showUnlockDialog(lockerId: String){
         if(unlockDialog!!.isShowing) return
 
         val model = functions.getDataById(lockerId)

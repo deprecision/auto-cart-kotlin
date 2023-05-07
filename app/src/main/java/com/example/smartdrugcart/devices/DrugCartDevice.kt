@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.View
+import android.widget.Toast
 import com.example.smartdrugcart.helpers.Prefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -64,8 +65,10 @@ class DrugCartDevice(var activity: Activity){
     }
 
     fun unlock(loggerId: Int) {
+
         Log.i(TAG, "unlockLocker: $loggerId")
         if (characteristic == null || gatt == null || loggerId >= cmdUnlockList.size) {
+            Toast.makeText(activity, "Bluetooth is disconnect", Toast.LENGTH_SHORT).show()
             return
         }
         curentLockerId = loggerId.toString()
