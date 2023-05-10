@@ -8,8 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.view.View
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -206,9 +204,7 @@ class MainActivity : AppCompatActivity() {
     private fun openRegister(){
         val countHn = drawer1List.count { it.hn != null }
         if(countHn == 0){
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
-            bwDevice.destroy()
+            showInputUserDialog()
         }else{
             //Toast.makeText(this, "Please dispense all the medicine.", Toast.LENGTH_SHORT).show()
             val snackbar = Snackbar.make(binding.root, "Please dispense all the medicine.", Snackbar.LENGTH_LONG)
@@ -253,6 +249,39 @@ class MainActivity : AppCompatActivity() {
             }
         }
         dialog.show()
+    }
+
+
+    private var inputUserIDDialog: InputUserIDDialog? = null
+    private val barcodeForInputUserResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+
+            Log.i(TAG, "Main barcodeForResult")
+
+            val data: Intent? = result.data
+            if(data != null){
+                val barcode = data?.getStringExtra("SCAN_RESULT")
+                inputUserIDDialog!!.setInput(barcode!!)
+                Toast.makeText(this, "User ID: ${barcode}", Toast.LENGTH_LONG).show()
+
+            }else{
+                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    private fun showInputUserDialog(){
+        inputUserIDDialog = InputUserIDDialog(this,  barcodeForInputUserResult)
+        inputUserIDDialog!!.setEvent { userId->
+            if(userId == "1234"){
+                val intent = Intent(this, RegisterActivity::class.java)
+                startActivity(intent)
+                bwDevice.destroy()
+                inputUserIDDialog!!.dismiss()
+                return@setEvent
+            }
+            Snackbar.make(inputUserIDDialog!!.window!!.decorView, "User not found.", Snackbar.LENGTH_SHORT).show()
+        }
+        inputUserIDDialog!!.show()
     }
 
     private fun setPay(hn: String?){

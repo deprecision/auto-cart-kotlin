@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SmartMedicalCart</string>
+    <string name="pleace_enter_user_id">Pleace enter user ID</string>
 </resources>
