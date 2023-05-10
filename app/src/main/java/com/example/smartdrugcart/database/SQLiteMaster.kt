@@ -17,11 +17,15 @@ val COL_CREATEDATE = "createDate"
 val COL_UPDATEDATE = "updateDate"
 
 //logger info
-val TABLE_LOCKER = "LoggerTB"
+val TABLE_LOCKER = "LockerTB"
 val COL_LOG_ID = "ID" //primary key
-val COL_LOG_HN = "HN"
+val COL_LOG_HN = "hn"
+val COL_LOG_POSITION = "position"
+val COL_LOG_DRAWER_AT = "drawerAt"
 val COL_LOG_COUNTER = "counter"
 val COL_LOG_STATE = "state"
+val COL_LOG_CMD_UNLOCK = "cmdUnlock"
+
 
 //history info
 val TABLE_HISTORY = "HistoryTB"
@@ -30,11 +34,14 @@ val COL_HIS_HN = "HN"
 val COL_HIS_LOGER_ID = "loggerID"
 val COL_HIS_STATE = "state"
 
-val DATABASE_CREATELogger = ("create table IF NOT EXISTS " + TABLE_LOCKER + "( "
+val DATABASE_CREATELocker = ("create table IF NOT EXISTS " + TABLE_LOCKER + "( "
         + COL_LOG_ID + " integer primary key autoincrement, "
         + COL_LOG_HN + " text,"
+        + COL_LOG_DRAWER_AT + " text,"
+        + COL_LOG_POSITION + " text,"
         + COL_LOG_COUNTER + " integer,"
-        + COL_LOG_STATE + " text" + ");"
+        + COL_LOG_STATE + " text,"
+        + COL_LOG_CMD_UNLOCK + " text" + ");"
         )
 
 val DATABASE_CREATEHistory = ("create table IF NOT EXISTS " + TABLE_HISTORY + "( "
@@ -53,7 +60,7 @@ class SQLiteMaster(var context: Context, private var sqliteName: String = SQLITE
     private val TAG = "SQLiteMasterTag"
 
     override fun onCreate(db: SQLiteDatabase?) {
-        db!!.execSQL(DATABASE_CREATELogger)
+        db!!.execSQL(DATABASE_CREATELocker)
         db!!.execSQL(DATABASE_CREATEHistory)
         Log.i(TAG, "onCreate Table")
 
@@ -80,7 +87,10 @@ class FunctionsLocker(private var activity: Activity) {
         val values = ContentValues()
         values.put(COL_LOG_HN, model.hn)
         values.put(COL_LOG_STATE, model.state)
+        values.put(COL_LOG_DRAWER_AT, model.drawerAt)
+        values.put(COL_LOG_POSITION, model.position)
         values.put(COL_LOG_COUNTER, model.counter)
+        values.put(COL_LOG_CMD_UNLOCK, model.cmdUnlock)
 
         val r = db!!.insert(TABLE_LOCKER, null, values)
         return r != 0L
@@ -92,7 +102,10 @@ class FunctionsLocker(private var activity: Activity) {
         values.put(COL_LOG_ID, model.id)
         values.put(COL_LOG_HN, model.hn)
         values.put(COL_LOG_STATE, model.state)
+        values.put(COL_LOG_DRAWER_AT, model.drawerAt)
+        values.put(COL_LOG_POSITION, model.position)
         values.put(COL_LOG_COUNTER, model.counter)
+        values.put(COL_LOG_CMD_UNLOCK, model.cmdUnlock)
 
         val r = db!!.update(TABLE_LOCKER, values, "$COL_LOG_ID = ?", arrayOf(model.id!!.toString()))
         return r != 0
@@ -107,7 +120,28 @@ class FunctionsLocker(private var activity: Activity) {
             m.id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LOG_ID))
             m.hn = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(COL_LOG_HN))
             m.state = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_STATE))
+            m.drawerAt = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_DRAWER_AT))
+            m.position = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_POSITION))
             m.counter = cursor.getInt(cursor.getColumnIndexOrThrow(COL_LOG_COUNTER))
+
+            dataList.add(m)
+        }
+        return dataList
+    }
+
+    fun getDataListDrawerAt(drawerAt: String): ArrayList<ModelLocker> {
+        val dataList = ArrayList<ModelLocker>()
+        val cursor = db!!.rawQuery("Select * from $TABLE_LOCKER where $COL_LOG_DRAWER_AT == ${drawerAt};", null)
+        while (cursor.moveToNext()) {
+
+            val m = ModelLocker()
+            m.id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LOG_ID))
+            m.hn = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(COL_LOG_HN))
+            m.state = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_STATE))
+            m.drawerAt = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_DRAWER_AT))
+            m.position = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_POSITION))
+            m.counter = cursor.getInt(cursor.getColumnIndexOrThrow(COL_LOG_COUNTER))
+            m.cmdUnlock = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_CMD_UNLOCK))
 
             dataList.add(m)
         }
@@ -123,7 +157,10 @@ class FunctionsLocker(private var activity: Activity) {
             m.id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_LOG_ID))
             m.hn = cursor.getStringOrNull(cursor.getColumnIndexOrThrow(COL_LOG_HN))
             m.state = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_STATE))
+            m.drawerAt = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_DRAWER_AT))
+            m.position = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_POSITION))
             m.counter = cursor.getInt(cursor.getColumnIndexOrThrow(COL_LOG_COUNTER))
+            m.cmdUnlock = cursor.getString(cursor.getColumnIndexOrThrow(COL_LOG_CMD_UNLOCK))
 
             return m
         }

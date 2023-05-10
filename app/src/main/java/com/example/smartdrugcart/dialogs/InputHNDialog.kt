@@ -16,6 +16,11 @@ import com.example.smartdrugcart.databinding.DialogInputHnBinding
 
 class InputHNDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
 
+    private val binding: DialogInputHnBinding by lazy {
+        DialogInputHnBinding.inflate(layoutInflater)
+    }
+
+
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
         this.l = l
@@ -32,8 +37,10 @@ class InputHNDialog(private var activity: Activity, private var barcodeForResult
         }
     }
 
-    private val binding: DialogInputHnBinding by lazy {
-        DialogInputHnBinding.inflate(layoutInflater)
+    fun setInputHN(hn: String){
+        binding.inputEDT.setText(hn)
+        val text = binding.inputEDT.text
+        l?.let { it1 -> it1(text.toString()) }
     }
 
     init {

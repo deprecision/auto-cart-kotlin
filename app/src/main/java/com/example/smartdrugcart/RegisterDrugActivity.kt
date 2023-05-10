@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.ActivityRegisterDrugBinding
-import com.example.smartdrugcart.devices.DrugCartDevice
+import com.example.smartdrugcart.devices.BwDevice
 import com.example.smartdrugcart.dialogs.*
 import com.example.smartdrugcart.helpers.Prefs
 import com.example.smartdrugcart.models.ModelLocker
@@ -28,7 +28,7 @@ class RegisterDrugActivity : AppCompatActivity() {
     private lateinit var dialog: InputHNDialog
     private lateinit var alarmUnlockDialog: AlarmUnlockDialog
     private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
-    private lateinit var device: DrugCartDevice
+    private lateinit var device: BwDevice
     //local
     private val drawer1List = ArrayList<ModelLocker>()
     private val drawer2List = ArrayList<ModelLocker>()
@@ -56,26 +56,26 @@ class RegisterDrugActivity : AppCompatActivity() {
 
         prefs = Prefs(this)
         functions = FunctionsLocker(this)
-        device = DrugCartDevice(this)
-        device.setMyEvent{ event, data ->
+        device = BwDevice(this)
+        device.setMyEvent{ event ->
             when(event){
-                DrugCartDevice.STATE_CONNECTED->{
+                BwDevice.STATE_CONNECTED->{
                     binding.stateDeviceTV.text = KEY_CONNECT
                     binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorGreen))
                     binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorGreen), PorterDuff.Mode.SRC_ATOP)
                     alarmDisconnectDialog.dismiss()
                 }
-                DrugCartDevice.STATE_DISCONNECTED->{
+                BwDevice.STATE_DISCONNECTED->{
                     binding.stateDeviceTV.text = KEY_DISSCONNET
                     binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
                     binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
                     alarmDisconnectDialog.show()
                 }
-                DrugCartDevice.STATE_UNLOCK_LOGGER->{
+                BwDevice.STATE_UNLOCK_LOGGER->{
                     showLoggerUnlockDialog()
                     Toast.makeText(this, "Logger is unlock.", Toast.LENGTH_SHORT).show()
                 }
-                DrugCartDevice.STATE_LOCK_LOGGER->{
+                BwDevice.STATE_LOCK_LOGGER->{
                     hideLoggerUnlockDialog()
                     Toast.makeText(this, "Logger is lock.", Toast.LENGTH_SHORT).show()
                 }
@@ -96,13 +96,8 @@ class RegisterDrugActivity : AppCompatActivity() {
     }
 
     private fun addDataList(){
-        drawer1List.addAll(functions.getDataList())
-
-        drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-        drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-        drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-        drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
-        drawer2List.add(ModelLocker(null, null, KEY_LOCK, 0))
+        drawer1List.addAll(functions.getDataListDrawerAt("1"))
+        drawer2List.addAll(functions.getDataListDrawerAt("2"))
     }
 
     private fun adapter(){
@@ -172,12 +167,12 @@ class RegisterDrugActivity : AppCompatActivity() {
                 //update data
                 functions.update(this.drawer1List[position])
                 //unlock logger
-                device.unlock(this.drawer1List[position].id!!.toInt())
+                //device.sendCmd(this.drawer1List[position].id!!.toInt())
                 //change notify
                 binding.drawer1RCV.adapter?.notifyItemChanged(position)
 
                 alarmUnlockDialog.setTitle("Logger is unlock")
-                alarmUnlockDialog.setSubtitle("Put medicine\nand close it to continue.")
+                alarmUnlockDialog.setDescription("Put medicine\nand close it to continue.")
                 dialog.dismiss()
             }
         }
@@ -193,12 +188,12 @@ class RegisterDrugActivity : AppCompatActivity() {
                 //update data
                 functions.update(this.drawer1List[position])
                 //unlock logger
-                device.unlock(this.drawer1List[position].id!!.toInt())
+                //device.sendCmd(this.drawer1List[position].id!!.toInt())
                 //change notify
                 binding.drawer1RCV.adapter?.notifyItemChanged(position)
 
                 alarmUnlockDialog.setTitle("Logger is unlock")
-                alarmUnlockDialog.setSubtitle("Take the pills out of the logger\nand close it to continue.")
+                alarmUnlockDialog.setDescription("Take the pills out of the logger\nand close it to continue.")
 
             }
             dialog.dismiss()

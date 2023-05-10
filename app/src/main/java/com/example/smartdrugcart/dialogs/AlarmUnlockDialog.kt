@@ -3,17 +3,11 @@ package com.example.smartdrugcart.dialogs
 import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
-import android.view.View
 import android.view.Window
 import com.example.smartdrugcart.databinding.DialogAlarmUnlockBinding
 import com.example.smartdrugcart.models.ModelLocker
 
 class AlarmUnlockDialog(private var activity: Activity): Dialog(activity) {
-
-    companion object{
-        val VIEW_TYPE_REGISTER = "register"
-        val VIEW_TYPE_PAY = "pay"
-    }
 
     private var viewType: String? = null
 
@@ -31,33 +25,22 @@ class AlarmUnlockDialog(private var activity: Activity): Dialog(activity) {
         //have set model
     }
 
-    fun setViewType(viewType: String){
-        this.viewType = viewType
-        when(viewType){
-            VIEW_TYPE_REGISTER->{
-
-            }
-            VIEW_TYPE_PAY->{
-
-            }
-        }
-    }
-
-    fun setModelDetail(model: ModelLocker?){
+    fun setModel(model: ModelLocker){
         //set detail
+        binding.numberTV.text = "No. ${model.position}"
+        binding.hnTV.text = "HN: ${model.hn}"
+        binding.nameTV.text = "Name: is blank"
+        binding.sexTV.text = "Sex: is blank"
+        binding.ageTV.text = "Age: is blank"
 
-    }
-
-    fun setNumber(number: String){
-        binding.numberTV.text = number
     }
 
     fun setTitle(title: String){
         binding.titleTV.text = title
     }
 
-    fun setSubtitle(subtitle: String){
-        binding.subtitleTV.text = subtitle
+    fun setDescription(description: String){
+        binding.subtitleTV.text = description
     }
 
 }

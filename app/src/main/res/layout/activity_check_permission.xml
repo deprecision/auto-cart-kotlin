@@ -18,16 +18,17 @@
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="25dp"
-            app:cardElevation="8dp"
+            app:cardCornerRadius="30dp"
+            app:cardElevation="0dp"
             app:cardPreventCornerOverlap="true"
             app:cardUseCompatPadding="true">
 
             <ImageView
+                android:id="@+id/iconAppIV"
                 android:layout_width="130dp"
                 android:layout_height="130dp"
                 android:scaleType="centerCrop"
-                android:src="@drawable/img_drug_cart"
+                android:src="@drawable/ic_app"
                 />
 
         </androidx.cardview.widget.CardView>

@@ -4,8 +4,6 @@ import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
-import android.os.Build
-import android.os.Bundle
 import android.os.Handler
 import android.util.Log
 import android.view.Window
@@ -16,21 +14,16 @@ import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.*
 import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.DialogRegisterBinding
-import com.example.smartdrugcart.devices.DrugCartDevice
+import com.example.smartdrugcart.devices.BwDevice
 import com.example.smartdrugcart.models.ModelLocker
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.concurrent.schedule
 
 class RegisterDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
 
 
     private lateinit var functions: FunctionsLocker
     //dialogs
-    private lateinit var device: DrugCartDevice
+    private lateinit var device: BwDevice
     //local
     private val drawer1List = ArrayList<ModelLocker>()
     private val drawer2List = ArrayList<ModelLocker>()
@@ -44,9 +37,19 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 //    }
 
     fun setInputHn(hn: String){
+
+        if(drawer1List.any { it.hn == hn }){
+            Toast.makeText(activity, "This HN number already exists.", Toast.LENGTH_SHORT).show()
+            inputHNDialog!!.setShowErrorInput(true)
+            return
+        }
         lastInputHN = hn
-        inputHNDialog!!.dismiss()
         unlockLocker()
+        unlockDialog!!.setDescription("Put medicine\nand close it to continue.")//set message is put medicine
+
+        inputHNDialog!!.dismiss()
+
+        Log.i("fewfw", "setInputHn: ${hn}" )
     }
 
     private val binding: DialogRegisterBinding by lazy {
@@ -67,7 +70,6 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         adapter()
         event()
 
-
         Log.i("dawda", "init")
     }
 
@@ -85,22 +87,25 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
         initUnlockDialog()
         functions = FunctionsLocker(activity)
-        device = DrugCartDevice(activity)
-        device.setMyEvent{ event, lockerId->
+        device = BwDevice(activity)
+        device.setMyEvent{ event->
             when(event){
-                DrugCartDevice.STATE_CONNECTED->{
+                BwDevice.STATE_CONNECTED->{
                     isConnect = true
                     hideDisconnectDialog()
                 }
-                DrugCartDevice.STATE_DISCONNECTED->{
+                BwDevice.STATE_DISCONNECTED->{
                     showDisconnectDialog()
                     device.connect()
                 }
-                DrugCartDevice.STATE_UNLOCK_LOGGER->{
-                    showUnlockDialog(lockerId!!)
+                BwDevice.STATE_UNLOCK_LOGGER->{
+                    val lockerId = drawer1List[lastPosition].id!!
+                    showUnlockDialog(lockerId.toString())
+                    Log.i("ewfwef", "Register STATE_UNLOCK_LOGGER")
                 }
-                DrugCartDevice.STATE_LOCK_LOGGER->{
+                BwDevice.STATE_LOCK_LOGGER->{
                     hideUnlockDialog()
+                    Log.i("ewfwef", "Register STATE_LOCK_LOGGER")
                 }
             }
         }
@@ -115,13 +120,8 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
     private fun addDataList(){
-        drawer1List.addAll(functions.getDataList())
-
-        drawer2List.add(ModelLocker(6, null, KEY_PAUSE, 0))
-        drawer2List.add(ModelLocker(7, null, KEY_PAUSE, 0))
-        drawer2List.add(ModelLocker(8, null, KEY_PAUSE, 0))
-        drawer2List.add(ModelLocker(9, null, KEY_PAUSE, 0))
-        drawer2List.add(ModelLocker(10, null, KEY_PAUSE, 0))
+        drawer1List.addAll(functions.getDataListDrawerAt("1"))
+        drawer2List.addAll(functions.getDataListDrawerAt("2"))
     }
 
     private fun adapter(){
@@ -164,9 +164,11 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 lastInputHN = hn
 
                 unlockLocker()
-                unlockDialog!!.setSubtitle("Put medicine\nand close it to continue.")//set message is put medicine
-
+                unlockDialog!!.setDescription("Put medicine\nand close it to continue.")//set message is put medicine
                 inputHNDialog!!.dismiss()
+
+                val lockerId = drawer1List[lastPosition].id!!
+                showUnlockDialog(lockerId.toString())
             }
         }
         inputHNDialog!!.show()
@@ -181,7 +183,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 lastInputHN = null
                 //unlock logger
                 unlockLocker()
-                unlockDialog!!.setSubtitle("Take the pills out of the locker\nand close it to continue.")//set message is clear medicine
+                unlockDialog!!.setDescription("Take the pills out of the locker\nand close it to continue.")//set message is clear medicine
             }
             dialog.dismiss()
         }
@@ -190,7 +192,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
     private fun unlockLocker(){
         val lockerId = drawer1List[lastPosition].id!!.toInt()
-        device.unlock(lockerId)
+        //device.sendCmd(lockerId)
     }
 
 
@@ -198,7 +200,6 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     private var unlockDialog: AlarmUnlockDialog? = null
     private fun initUnlockDialog(){
         unlockDialog = AlarmUnlockDialog(activity)
-        unlockDialog!!.setViewType(AlarmUnlockDialog.VIEW_TYPE_REGISTER)
         unlockDialog!!.setOnDismissListener {
             updateData()
             showSuccessDialog()
@@ -206,12 +207,13 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
         }
     }
     private fun showUnlockDialog(lockerId: String){
+
+        Log.i("adwdad", "Register showUnlockDialog")
         if(unlockDialog!!.isShowing) return
 
         val model = functions.getDataById(lockerId)
         if(model != null){
             unlockDialog!!.setTitle("Locker is unlock")
-            unlockDialog!!.setNumber("No.${model.id!!}")
             unlockDialog!!.show()
             Toast.makeText(activity, "Locker is unlock.", Toast.LENGTH_SHORT).show()
         }else{

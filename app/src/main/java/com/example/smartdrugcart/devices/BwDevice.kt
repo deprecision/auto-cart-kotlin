@@ -3,8 +3,6 @@ import android.app.Activity
 import android.bluetooth.*
 import android.content.Context
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -15,9 +13,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Hex
 import java.util.*
-import kotlin.time.Duration
 
-class DrugCartDevice(var activity: Activity){
+class BwDevice(var activity: Activity){
 
     companion object{
         val STATE_CONNECTED = "connected"
@@ -28,16 +25,13 @@ class DrugCartDevice(var activity: Activity){
         val STATE_UNLOCK = "0"
         val STATE_LOCK = "1"
 
-        private val cmdUnlockList = arrayListOf("0200310336", "0201310337", "0202310338", "0203310339", "020431033A")
-        //private val cmdCheckStateList = arrayListOf("-", "0200300335", "0201300336", "0202300337", "0203300338", "0204300339", "020530033A")
-
         private val UUID_SERVICE = UUID.fromString("0000fff0-0000-1000-8000-00805f9b34fb")
         private val UUID_RESULT = UUID.fromString("0000fff1-0000-1000-8000-00805f9b34fb")
         private val UUID_CONTROLLER = UUID.fromString("0000fff2-0000-1000-8000-00805f9b34fb")
     }
 
-    private var l: ((event: String, data: String?) -> Unit?)? = null
-    fun setMyEvent(l: (event: String, data: String?) -> Unit) {
+    private var l: ((event: String) -> Unit?)? = null
+    fun setMyEvent(l: (event: String) -> Unit) {
         this.l = l
     }
 
@@ -48,65 +42,56 @@ class DrugCartDevice(var activity: Activity){
     private var characteristic: BluetoothGattCharacteristic? = null
 
     private var prefs = Prefs(activity)
-    private var position = 0
-    private var curentLockerId: String? = null
+
+    //private val cmdUnlockList = arrayListOf("0200310336", "0201310337", "0202310338", "0203310339", "020431033A")
+    //private val cmdCheckStateList = arrayListOf("-", "0200300335", "0201300336", "0202300337", "0203300338", "0204300339", "020530033A")
 
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter = bluetoothManager.adapter
 
     fun connect() {
         //DD:65:0C:D3:9A:02
-        val macAddress = prefs.strMacAddress
-        if(macAddress == null){
+        if(gatt != null){
             return
         }
-        this.device = bluetoothAdapter.getRemoteDevice(macAddress)
-        this.gatt = device!!.connectGatt(activity, true, gattCallback)
+
+        val macAddress = prefs.strMacAddress
+        device = bluetoothAdapter.getRemoteDevice(macAddress)
+        gatt = device!!.connectGatt(activity, true, gattCallback)
     }
 
-    fun unlock(loggerId: Int) {
+    fun reconnect(){
+        gatt?.close()
+        gatt = null
 
-        Log.i(TAG, "unlockLocker: $loggerId")
-        if (characteristic == null || gatt == null || loggerId >= cmdUnlockList.size) {
+        val macAddress = prefs.strMacAddress
+        device = bluetoothAdapter.getRemoteDevice(macAddress)
+        gatt = device!!.connectGatt(activity, true, gattCallback)
+    }
+
+    fun isConnect(): Boolean{
+        return gatt != null
+    }
+
+    private var lastPosition = -1
+    private var lastDrawerAt = -1
+    private var currentCmd = ""
+    private val cmdCheckState = "02 F0 32 03 27"  //check state all
+    fun sendCommand(position: Int, drawerAt: Int, cmd: String) {
+        if (characteristic == null || gatt == null) {
             Toast.makeText(activity, "Bluetooth is disconnect", Toast.LENGTH_SHORT).show()
             return
         }
-        curentLockerId = loggerId.toString()
-        //for test
-        var command = ""
-        when(loggerId.toString()){
-            "1"->{
-                position = 7
-                command = cmdUnlockList[0]
-            }
-            "2"->{
-                position = 6
-                command = cmdUnlockList[1]
-            }
-            "3"->{
-                position = 5
-                command = cmdUnlockList[2]
-            }
-            "4"->{
-                position = 4
-                command = cmdUnlockList[3]
-            }
-            "5"->{
-                position = 3
-                command = cmdUnlockList[4]
-            }
-        }
-        // command open logger
-        writeCharacteristicCurrent(command)
 
-        //loop check state of locker delay 0.6 sec
-        val handler = Handler(Looper.getMainLooper())
-        handler.postDelayed(object : Runnable{
-            override fun run() {
-                val cmdCheckState = "02 F0 32 03 27" //check state all
-                writeCharacteristicCurrent(cmdCheckState)
-            }
-        }, 600)
+        lastPosition = position
+        lastDrawerAt = drawerAt
+        currentCmd = cmd
+
+        writeCharacteristicCurrent(currentCmd)
+    }
+
+    fun checkStatusLockerAll(){
+        writeCharacteristicCurrent(cmdCheckState)
     }
 
     fun destroy(){
@@ -123,13 +108,13 @@ class DrugCartDevice(var activity: Activity){
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         gatt?.discoverServices()
-                        l?.let { it(STATE_CONNECTED, null) }
+                        l?.let { it(STATE_CONNECTED) }
 
                         Log.i(TAG, "STATE_CONNECTED")
                         Log.i(TAG, "discoverServices")
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
-                        l?.let { it(STATE_DISCONNECTED, null) }
+                        l?.let { it(STATE_DISCONNECTED) }
                         Log.i(TAG, "STATE_DISCONNECTED")
                     }
                 }
@@ -212,7 +197,6 @@ class DrugCartDevice(var activity: Activity){
         }
     }
 
-    private var statusCheckConfirmLock = "off"
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
         Log.i(TAG, "broadcastUpdate : ${characteristic.uuid}")
 
@@ -236,39 +220,27 @@ class DrugCartDevice(var activity: Activity){
                             Log.i(TAG, "hexNumber: $hexNumber")
                             Log.i(TAG, "binaryNumber: $binaryNumber")
 
-                            val statusCurrentLocker = binaryNumber[position].toString()
-                            when(statusCurrentLocker){
+                            Log.i(TAG, "lastPosition: $lastPosition")
+
+                            val statusLocker = binaryNumber[8 - lastPosition].toString()
+                            when(statusLocker){
                                 STATE_UNLOCK->{
+                                    Log.i(TAG, "statusCurrentLocker: STATE_UNLOCK")
 
                                     val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_UNLOCK_LOGGER, curentLockerId) }//check value againt
+                                        l?.let { it(STATE_UNLOCK_LOGGER) }//check value againt
                                     }
-
-                                    Handler(Looper.getMainLooper()).postDelayed({
-                                            val cmdCheckState = "02 F0 32 03 27" //check state all
-                                            writeCharacteristicCurrent(cmdCheckState)
-                                        }, 1000)
-
-                                    statusCheckConfirmLock = "on"
                                 }
                                 STATE_LOCK->{
+                                    Log.i(TAG, "statusCurrentLocker: STATE_LOCK")
+
                                     val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_LOCK_LOGGER, curentLockerId) }//check value againt
+                                        l?.let { it(STATE_LOCK_LOGGER) }//check value againt
                                     }
-
-                                    if(statusCheckConfirmLock == "on"){
-                                        Handler(Looper.getMainLooper()).postDelayed({
-                                            val cmdCheckState = "02 F0 32 03 27" //check state all
-                                            writeCharacteristicCurrent(cmdCheckState)
-                                        }, 3000)
-                                    }
-                                    statusCheckConfirmLock = "off"
-
                                 }
                             }
-
                         }
                     }
                 }

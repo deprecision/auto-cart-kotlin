@@ -1,6 +1,5 @@
 package com.example.smartdrugcart.dialogs
 
-import android.Manifest
 import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
@@ -9,9 +8,9 @@ import android.view.Window
 import android.widget.Toast
 import com.example.smartdrugcart.SettingActivity
 import com.example.smartdrugcart.databinding.DialogAlarmDisconnectBinding
-import com.example.smartdrugcart.devices.DrugCartDevice
+import com.example.smartdrugcart.devices.BwDevice
 
-class AlarmDisconnectDialog(private var activity: Activity, private var device: DrugCartDevice): Dialog(activity) {
+class AlarmDisconnectDialog(private var activity: Activity, private var device: BwDevice): Dialog(activity) {
 
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
@@ -35,7 +34,7 @@ class AlarmDisconnectDialog(private var activity: Activity, private var device: 
 
         binding.refreshLL.setOnClickListener {
             Toast.makeText(activity, "reconnected.", Toast.LENGTH_SHORT).show()
-            device.connect()
+            device.reconnect()
         }
 
     }

@@ -2,6 +2,7 @@ package com.example.smartdrugcart.helpers
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.smartdrugcart.KEY_MODE_PAY
 
 class Prefs (private var context: Context) {
 
@@ -12,5 +13,10 @@ class Prefs (private var context: Context) {
     var strMacAddress: String?
         get() = preferences.getString(APP_PREF_STR_MAC_ADDRESS, null)
         set(value) = preferences.edit().putString(APP_PREF_STR_MAC_ADDRESS, value).apply()
+
+    private val APP_PREF_STR_INIT_LOCKER = "strInitLocker"
+    var strInitLocker: String?
+        get() = preferences.getString(APP_PREF_STR_INIT_LOCKER, null)
+        set(value) = preferences.edit().putString(APP_PREF_STR_INIT_LOCKER, value).apply()
 
 }
