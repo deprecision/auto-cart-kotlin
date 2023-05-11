@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
-import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -51,7 +50,6 @@ class MainActivity : AppCompatActivity() {
 
         init()
         initTTS()
-        adapter()
         event()
     }
 
@@ -60,7 +58,6 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         addDataList()
-        binding.drawer1RCV.adapter?.notifyDataSetChanged()
         bwDevice.connect()
 
         Log.i(TAG, "onResume")
@@ -87,10 +84,14 @@ class MainActivity : AppCompatActivity() {
                 BwDevice.STATE_DISCONNECTED->{
                     Log.i(TAG, "Main STATE_DISCONNECTED")
                     updateUI(BwDevice.STATE_DISCONNECTED)
+                    bwDevice.reconnect()
                 }
                 BwDevice.STATE_UNLOCK_LOGGER->{
-                    showUnlockDialog()
+                    if(openingDialog?.isShowing == true){
+                        hideOpeningDialog()
+                    }
 
+                    showUnlockDialog()
                     if(currentPositionVerify != -1){
                         currentPositionVerify = -1   //reset value
                         speak("Please close the drawer completely.")
@@ -98,6 +99,13 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "Main STATE_UNLOCK_LOGGER")
                 }
                 BwDevice.STATE_LOCK_LOGGER->{
+                    if(openingDialog?.isShowing == true){
+                        hideOpeningDialog()
+                        //สั่งเปิดเเต่ไม่เปิดลิ้นชัก
+                        //showReportDialog()
+                        Snackbar.make(binding.root, "Locker is lock.", Toast.LENGTH_LONG).show()
+                        return@setMyEvent
+                    }
 
                     if(lastPosition == currentPositionVerify){
                         hideUnlockDialog()
@@ -159,7 +167,6 @@ class MainActivity : AppCompatActivity() {
                 binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
                 binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
                 showDisconnectDialog()
-                bwDevice.reconnect()
             }
         }
     }
@@ -171,6 +178,7 @@ class MainActivity : AppCompatActivity() {
         drawer1List.addAll(functions.getDataListDrawerAt("1"))
         drawer2List.addAll(functions.getDataListDrawerAt("2"))
 
+        adapter()
     }
 
     private fun adapter(){
@@ -302,14 +310,30 @@ class MainActivity : AppCompatActivity() {
         if(locker != null){
             val position = drawer1List.indexOf(locker)
             lastPosition = position
-            bwDevice.sendCommand(locker.position!!.toInt(), locker.drawerAt!!.toInt(), locker.cmdUnlock!!)
             inputHNDialog!!.dismiss()
 
-            showUnlockDialog()
+            bwDevice.sendCommand(locker.position!!.toInt(), locker.drawerAt!!.toInt(), locker.cmdUnlock!!)
+            showOpeningDialog()
         }else{
             Toast.makeText(this, "Not found", Toast.LENGTH_SHORT).show()
         }
 
+    }
+
+
+    private var enableDialog: EnableDialog? = null
+    private fun showEnableDialog(){
+        enableDialog = EnableDialog(this)
+        enableDialog!!.setModel(drawer1List[lastPosition])
+        enableDialog!!.setEvent { event ->
+            when(event){
+                EnableDialog.EVENT_ENABLE->{
+                    drawer1List[lastPosition].state = KEY_ENABLE
+                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
+                }
+            }
+        }
+        enableDialog!!.show()
     }
 
     private fun showClearDialog(position: Int) {
@@ -336,13 +360,32 @@ class MainActivity : AppCompatActivity() {
     private var currentPositionVerify = -1
     private var unlockDialog: UnlockDialog? = null
     private fun showUnlockDialog(){
+        val locker = drawer1List[lastPosition]
+        if(locker.state == KEY_DISABLE){
+            return
+        }
 
         if(unlockDialog == null){//init
             unlockDialog = UnlockDialog(this)
             unlockDialog!!.setDescription("Take the pills out of the drawer.")
-            unlockDialog!!.setOnDismissListener {
-                showClearDialog(lastPosition)
-                Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
+            unlockDialog!!.setMyEvent { event ->
+                when(event){
+                    UnlockDialog.EVENT_SUCCESS->{
+                        showClearDialog(lastPosition)
+                        Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
+                    }
+                    UnlockDialog.EVENT_DISABLE->{
+                        Log.i("fewfwe", "EVENT_DISABLE")
+                        drawer1List[lastPosition].hn = null
+                        drawer1List[lastPosition].counter = 0
+                        drawer1List[lastPosition].state = KEY_DISABLE
+                        functions.update(drawer1List[lastPosition])
+
+                        binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        hideUnlockDialog()
+                    }
+                }
+
             }
         }
 
@@ -354,7 +397,6 @@ class MainActivity : AppCompatActivity() {
                 bwDevice.checkStatusLockerAll()
             }
         }else{ //if not showing
-            val locker = drawer1List[lastPosition]
             unlockDialog!!.setModel(locker)
             unlockDialog!!.show()
 
@@ -370,6 +412,26 @@ class MainActivity : AppCompatActivity() {
         unlockDialog?.dismiss()
     }
 
+    private var openingDialog: OpeningDialog? = null
+    private fun showOpeningDialog(){
+        openingDialog = OpeningDialog(this)
+        openingDialog!!.setModel(drawer1List[lastPosition])
+        openingDialog!!.show()
+
+        Timer().schedule(600){
+            bwDevice.checkStatusLockerAll()
+        }
+    }
+    private fun hideOpeningDialog(){
+        openingDialog?.dismiss()
+    }
+
+
+    private var disableDialog: DisableDialog? = null
+    private fun showReportDialog(){
+        disableDialog = DisableDialog(this)
+        disableDialog!!.show()
+    }
 
     private var disconnectDialog: DisconnectDialog? = null
     private fun showDisconnectDialog(){

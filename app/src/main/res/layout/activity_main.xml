@@ -317,6 +317,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:orientation="horizontal">
 
             <androidx.cardview.widget.CardView
@@ -324,7 +325,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 app:cardCornerRadius="30dp"
-                app:cardElevation="0dp"
+                app:cardElevation="2dp"
                 app:cardPreventCornerOverlap="true"
                 app:cardUseCompatPadding="true">
 
@@ -359,7 +360,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 app:cardCornerRadius="30dp"
-                app:cardElevation="0dp"
+                app:cardElevation="2dp"
                 app:cardPreventCornerOverlap="true"
                 app:cardUseCompatPadding="true">
 

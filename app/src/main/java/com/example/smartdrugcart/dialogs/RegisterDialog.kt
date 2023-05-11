@@ -132,8 +132,8 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
                 AdapterLocker.EVENT_SHOW_INPUTDIALOG->{
                     showInputDialog(position)
                 }
-                AdapterLocker.EVENT_SHOW_CLEARDIALOG->{
-                    showClearDialog(position)
+                AdapterLocker.EVENT_SHOW_ENABLEDIALOG->{
+                    //showClearDialog(position)
                 }
             }
         }

@@ -6,8 +6,11 @@ const val KEY_CONNECT = "connect"
 const val KEY_DISSCONNET = "disconnect"
 
 const val KEY_UNLOCK = "Unlock"
-const val KEY_LOCK = "Lock"
+
+const val KEY_ENABLE = "Enable"
+const val KEY_DISABLE = "Disable"
 const val KEY_PAUSE = "Pause"
+
 
 const val KEY_MODE_REGISTER = "Register"
 const val KEY_MODE_PAY = "Pay"

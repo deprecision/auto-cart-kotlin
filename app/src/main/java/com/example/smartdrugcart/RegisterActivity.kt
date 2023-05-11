@@ -14,11 +14,9 @@ import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.ActivityRegisterBinding
 import com.example.smartdrugcart.devices.BwDevice
-import com.example.smartdrugcart.dialogs.DisconnectDialog
-import com.example.smartdrugcart.dialogs.SuccessDialog
-import com.example.smartdrugcart.dialogs.UnlockDialog
-import com.example.smartdrugcart.dialogs.InputHNDialog
+import com.example.smartdrugcart.dialogs.*
 import com.example.smartdrugcart.models.ModelLocker
+import com.google.android.material.snackbar.Snackbar
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -72,14 +70,24 @@ class RegisterActivity : AppCompatActivity() {
                     bwDevice.reconnect()
                 }
                 BwDevice.STATE_UNLOCK_LOGGER->{
+                    if(openingDialog?.isShowing == true){
+                        hideOpeningDialog()
+                    }
                     showUnlockDialog()
                     if(currentPositionVerify != -1){
                         currentPositionVerify = -1   //reset value
                         speak("Please close the drawer completely.")
                     }
                     Log.i(TAG, "Register STATE_UNLOCK_LOGGER")
+
                 }
                 BwDevice.STATE_LOCK_LOGGER->{
+                    if(openingDialog?.isShowing == true){
+                        hideOpeningDialog()
+                        //สั่งเปิดเเต่ไม่เปิดลิ้นชัก
+                        Snackbar.make(binding.root, "Locker is lock.", Toast.LENGTH_LONG).show()
+                        return@setMyEvent
+                    }
 
                     if(lastPosition == currentPositionVerify){
                         hideUnlockDialog()
@@ -146,6 +154,11 @@ class RegisterActivity : AppCompatActivity() {
                     lastPosition = position
                     showInputDialog()
                 }
+                AdapterLocker.EVENT_SHOW_ENABLEDIALOG->{
+                    lastDrawerAt = "1"
+                    lastPosition = position
+                    showEnableDialog()
+                }
             }
         }
         binding.drawer1RCV.adapter = adapter
@@ -198,7 +211,7 @@ class RegisterActivity : AppCompatActivity() {
         unlockLocker(lastPosition)
 
         inputHNDialog!!.dismiss()
-        showUnlockDialog()
+        showOpeningDialog()
 
 
     }
@@ -215,6 +228,23 @@ class RegisterActivity : AppCompatActivity() {
     }
 
 
+    private var enableDialog: EnableDialog? = null
+    private fun showEnableDialog(){
+        enableDialog = EnableDialog(this)
+        enableDialog!!.setModel(drawer1List[lastPosition])
+        enableDialog!!.setEvent { event ->
+            when(event){
+                EnableDialog.EVENT_ENABLE->{
+                    drawer1List[lastPosition].state = KEY_ENABLE
+                    functions.update(drawer1List[lastPosition])
+                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
+                }
+            }
+        }
+        enableDialog!!.show()
+    }
+
+
     private fun showSuccessDialog(){
         val dialog = SuccessDialog(this)
         dialog.show()
@@ -223,14 +253,34 @@ class RegisterActivity : AppCompatActivity() {
     private var currentPositionVerify = -1
     private var unlockDialog: UnlockDialog? = null
     private fun showUnlockDialog(){
+        val locker = drawer1List[lastPosition]
+        if(locker.state == KEY_DISABLE){
+            return
+        }
 
         if(unlockDialog == null){//init
             unlockDialog = UnlockDialog(this)
             unlockDialog!!.setTitle("Locker is unlock")
             unlockDialog!!.setDescription("Put the pills in the drawer.")
-            unlockDialog!!.setOnDismissListener {
-                updateData()
-                Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
+            unlockDialog!!.setMyEvent { event ->
+                when(event){
+                    UnlockDialog.EVENT_SUCCESS->{
+                        Log.i("fewfwe", "EVENT_SUCCESS")
+                        updateData()
+                        Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
+                    }
+
+                    UnlockDialog.EVENT_DISABLE->{
+                        Log.i("fewfwe", "EVENT_DISABLE")
+                        drawer1List[lastPosition].hn = null
+                        drawer1List[lastPosition].counter = 0
+                        drawer1List[lastPosition].state = KEY_DISABLE
+                        functions.update(drawer1List[lastPosition])
+
+                        binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        hideUnlockDialog()
+                    }
+                }
             }
         }
 
@@ -241,12 +291,12 @@ class RegisterActivity : AppCompatActivity() {
                 bwDevice.checkStatusLockerAll()
             }
         }else{ //if not showing
-            val locker = drawer1List[lastPosition]
+
             locker.hn = lastInputHN
             unlockDialog!!.setModel(locker)
             unlockDialog!!.show()
 
-            Timer().schedule(600) {
+            Timer().schedule(1000) {
                 Log.i(TAG, "Register Timer is Check Status Locker")
                 bwDevice.checkStatusLockerAll()
             }
@@ -255,6 +305,20 @@ class RegisterActivity : AppCompatActivity() {
     }
     private fun hideUnlockDialog(){
         unlockDialog?.dismiss()
+    }
+
+    private var openingDialog: OpeningDialog? = null
+    private fun showOpeningDialog(){
+        openingDialog = OpeningDialog(this)
+        openingDialog!!.setModel(drawer1List[lastPosition])
+        openingDialog!!.show()
+
+        Timer().schedule(600){
+            bwDevice.checkStatusLockerAll()
+        }
+    }
+    private fun hideOpeningDialog(){
+        openingDialog?.dismiss()
     }
 
     private fun updateData(){

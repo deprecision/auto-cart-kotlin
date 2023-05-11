@@ -87,7 +87,7 @@ class CheckPermission : AppCompatActivity() {
                         initData()
                         if(!verifyMacAddress()){
                             prefs.strMacAddress = "DD:65:0C:D3:9A:02"
-                            val intent = Intent(this@CheckPermission, SettingActivity::class.java)
+                            val intent = Intent(this@CheckPermission, SettingMacAddressActivity::class.java)
                             startActivity(intent)
                             finish()
                         }else {
@@ -111,11 +111,11 @@ class CheckPermission : AppCompatActivity() {
         Log.i(TAG, "initData status: ${prefs.strInitLocker}")
         val functions = FunctionsLocker(this)
         if(prefs.strInitLocker == null){
-            functions.insert(ModelLocker(null, null, KEY_LOCK,"1", "1", 0, "0200310336"))
-            functions.insert(ModelLocker(null, null, KEY_LOCK,"2", "1", 0,"0201310337"))
-            functions.insert(ModelLocker(null, null, KEY_LOCK,"3", "1", 0,"0202310338"))
-            functions.insert(ModelLocker(null, null, KEY_LOCK,"4", "1", 0,"0203310339"))
-            functions.insert(ModelLocker(null, null, KEY_LOCK,"5", "1", 0,"020431033A"))
+            functions.insert(ModelLocker(null, null, KEY_ENABLE,"1", "1", 0, "0200310336"))
+            functions.insert(ModelLocker(null, null, KEY_ENABLE,"2", "1", 0,"0201310337"))
+            functions.insert(ModelLocker(null, null, KEY_ENABLE,"3", "1", 0,"0202310338"))
+            functions.insert(ModelLocker(null, null, KEY_ENABLE,"4", "1", 0,"0203310339"))
+            functions.insert(ModelLocker(null, null, KEY_ENABLE,"5", "1", 0,"020431033A"))
 
             functions.insert(ModelLocker(null, null, KEY_PAUSE,"1", "2", 0,""))
             functions.insert(ModelLocker(null, null, KEY_PAUSE,"2", "2", 0,""))

@@ -6,7 +6,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.view.Window
 import android.widget.Toast
-import com.example.smartdrugcart.SettingActivity
+import com.example.smartdrugcart.SettingMacAddressActivity
 import com.example.smartdrugcart.databinding.DialogDisconnectBinding
 import com.example.smartdrugcart.devices.BwDevice
 
@@ -43,7 +43,7 @@ class DisconnectDialog(private var activity: Activity, private var device: BwDev
         val dialog = PasswordDialog(activity)
         dialog.setEvent {
             if(it == "1111"){
-                var intent = Intent(activity, SettingActivity::class.java)
+                var intent = Intent(activity, SettingMacAddressActivity::class.java)
                 activity.startActivity(intent)
             }else{
                 Toast.makeText(activity, "invalid password.", Toast.LENGTH_SHORT).show()
