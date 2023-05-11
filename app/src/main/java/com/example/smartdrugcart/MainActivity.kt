@@ -332,11 +332,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private var currentPositionVerify = -1
-    private var unlockDialog: AlarmUnlockDialog? = null
+    private var unlockDialog: UnlockDialog? = null
     private fun showUnlockDialog(){
 
         if(unlockDialog == null){//init
-            unlockDialog = AlarmUnlockDialog(this)
+            unlockDialog = UnlockDialog(this)
             unlockDialog!!.setDescription("Take the pills out of the drawer.")
             unlockDialog!!.setOnDismissListener {
                 showClearDialog(lastPosition)
@@ -369,10 +369,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private var disconnectDialog: AlarmDisconnectDialog? = null
+    private var disconnectDialog: DisconnectDialog? = null
     private fun showDisconnectDialog(){
         if(disconnectDialog == null){
-            disconnectDialog = AlarmDisconnectDialog(this, bwDevice)
+            disconnectDialog = DisconnectDialog(this, bwDevice)
         }
         disconnectDialog!!.show()
     }

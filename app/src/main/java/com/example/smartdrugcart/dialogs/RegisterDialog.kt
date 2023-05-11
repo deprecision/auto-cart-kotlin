@@ -197,9 +197,9 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
 
 
-    private var unlockDialog: AlarmUnlockDialog? = null
+    private var unlockDialog: UnlockDialog? = null
     private fun initUnlockDialog(){
-        unlockDialog = AlarmUnlockDialog(activity)
+        unlockDialog = UnlockDialog(activity)
         unlockDialog!!.setOnDismissListener {
             updateData()
             showSuccessDialog()
@@ -225,10 +225,10 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
     }
 
 
-    private var disconnectDialog: AlarmDisconnectDialog? = null
+    private var disconnectDialog: DisconnectDialog? = null
     private fun showDisconnectDialog(){
         if(disconnectDialog == null){
-            disconnectDialog = AlarmDisconnectDialog(activity, device)
+            disconnectDialog = DisconnectDialog(activity, device)
         }
         disconnectDialog!!.show()
     }
@@ -238,7 +238,7 @@ class RegisterDialog(private var activity: Activity, private var barcodeForResul
 
 
     private fun showSuccessDialog(){
-        val dialog = AlarmSuccessDialog(activity)
+        val dialog = SuccessDialog(activity)
         dialog.show()
     }
 

@@ -7,18 +7,18 @@ import android.content.Intent
 import android.view.Window
 import android.widget.Toast
 import com.example.smartdrugcart.SettingActivity
-import com.example.smartdrugcart.databinding.DialogAlarmDisconnectBinding
+import com.example.smartdrugcart.databinding.DialogDisconnectBinding
 import com.example.smartdrugcart.devices.BwDevice
 
-class AlarmDisconnectDialog(private var activity: Activity, private var device: BwDevice): Dialog(activity) {
+class DisconnectDialog(private var activity: Activity, private var device: BwDevice): Dialog(activity) {
 
     private var l: ((text: String)->Unit)? = null
     fun setEvent(l: (text: String)->Unit){
         this.l = l
     }
 
-    private val binding: DialogAlarmDisconnectBinding by lazy {
-        DialogAlarmDisconnectBinding.inflate(layoutInflater)
+    private val binding: DialogDisconnectBinding by lazy {
+        DialogDisconnectBinding.inflate(layoutInflater)
     }
 
     init {

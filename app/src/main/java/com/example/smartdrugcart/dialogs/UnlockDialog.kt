@@ -4,15 +4,15 @@ import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.view.Window
-import com.example.smartdrugcart.databinding.DialogAlarmUnlockBinding
+import com.example.smartdrugcart.databinding.DialogUnlockBinding
 import com.example.smartdrugcart.models.ModelLocker
 
-class AlarmUnlockDialog(private var activity: Activity): Dialog(activity) {
+class UnlockDialog(private var activity: Activity): Dialog(activity) {
 
     private var viewType: String? = null
 
-    private val binding: DialogAlarmUnlockBinding by lazy {
-        DialogAlarmUnlockBinding.inflate(layoutInflater)
+    private val binding: DialogUnlockBinding by lazy {
+        DialogUnlockBinding.inflate(layoutInflater)
     }
 
     init {

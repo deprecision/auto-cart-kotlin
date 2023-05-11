@@ -26,8 +26,8 @@ class RegisterDrugActivity : AppCompatActivity() {
     private lateinit var functions: FunctionsLocker
     //dialogs
     private lateinit var dialog: InputHNDialog
-    private lateinit var alarmUnlockDialog: AlarmUnlockDialog
-    private lateinit var alarmDisconnectDialog: AlarmDisconnectDialog
+    private lateinit var alarmUnlockDialog: UnlockDialog
+    private lateinit var disconnectDialog: DisconnectDialog
     private lateinit var device: BwDevice
     //local
     private val drawer1List = ArrayList<ModelLocker>()
@@ -63,13 +63,13 @@ class RegisterDrugActivity : AppCompatActivity() {
                     binding.stateDeviceTV.text = KEY_CONNECT
                     binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorGreen))
                     binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorGreen), PorterDuff.Mode.SRC_ATOP)
-                    alarmDisconnectDialog.dismiss()
+                    disconnectDialog.dismiss()
                 }
                 BwDevice.STATE_DISCONNECTED->{
                     binding.stateDeviceTV.text = KEY_DISSCONNET
                     binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
                     binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
-                    alarmDisconnectDialog.show()
+                    disconnectDialog.show()
                 }
                 BwDevice.STATE_UNLOCK_LOGGER->{
                     showLoggerUnlockDialog()
@@ -81,7 +81,7 @@ class RegisterDrugActivity : AppCompatActivity() {
                 }
             }
         }
-        alarmUnlockDialog = AlarmUnlockDialog(this)
+        alarmUnlockDialog = UnlockDialog(this)
 
         binding.macAddressTV.text = prefs.strMacAddress
         binding.stateDeviceTV.text = KEY_DISSCONNET
@@ -202,7 +202,7 @@ class RegisterDrugActivity : AppCompatActivity() {
     }
 
     private fun showAlarmSuccessDialog(){
-        val dialog = AlarmSuccessDialog(this)
+        val dialog = SuccessDialog(this)
         dialog.show()
     }
 

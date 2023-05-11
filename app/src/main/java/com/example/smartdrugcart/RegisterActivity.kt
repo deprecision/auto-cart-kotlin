@@ -14,9 +14,9 @@ import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.adapters.AdapterLocker
 import com.example.smartdrugcart.databinding.ActivityRegisterBinding
 import com.example.smartdrugcart.devices.BwDevice
-import com.example.smartdrugcart.dialogs.AlarmDisconnectDialog
-import com.example.smartdrugcart.dialogs.AlarmSuccessDialog
-import com.example.smartdrugcart.dialogs.AlarmUnlockDialog
+import com.example.smartdrugcart.dialogs.DisconnectDialog
+import com.example.smartdrugcart.dialogs.SuccessDialog
+import com.example.smartdrugcart.dialogs.UnlockDialog
 import com.example.smartdrugcart.dialogs.InputHNDialog
 import com.example.smartdrugcart.models.ModelLocker
 import java.util.*
@@ -203,10 +203,10 @@ class RegisterActivity : AppCompatActivity() {
 
     }
 
-    private var disconnectDialog: AlarmDisconnectDialog? = null
+    private var disconnectDialog: DisconnectDialog? = null
     private fun showDisconnectDialog(){
         if(disconnectDialog == null){
-            disconnectDialog = AlarmDisconnectDialog(this, bwDevice)
+            disconnectDialog = DisconnectDialog(this, bwDevice)
         }
         disconnectDialog!!.show()
     }
@@ -216,16 +216,16 @@ class RegisterActivity : AppCompatActivity() {
 
 
     private fun showSuccessDialog(){
-        val dialog = AlarmSuccessDialog(this)
+        val dialog = SuccessDialog(this)
         dialog.show()
     }
 
     private var currentPositionVerify = -1
-    private var unlockDialog: AlarmUnlockDialog? = null
+    private var unlockDialog: UnlockDialog? = null
     private fun showUnlockDialog(){
 
         if(unlockDialog == null){//init
-            unlockDialog = AlarmUnlockDialog(this)
+            unlockDialog = UnlockDialog(this)
             unlockDialog!!.setTitle("Locker is unlock")
             unlockDialog!!.setDescription("Put the pills in the drawer.")
             unlockDialog!!.setOnDismissListener {

@@ -4,12 +4,12 @@ import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.view.Window
-import com.example.smartdrugcart.databinding.DialogAlarmCheckmarkBinding
+import com.example.smartdrugcart.databinding.DialogSuccessBinding
 
-class AlarmSuccessDialog(private var activity: Activity): Dialog(activity) {
+class SuccessDialog(private var activity: Activity): Dialog(activity) {
 
-    private val binding: DialogAlarmCheckmarkBinding by lazy {
-        DialogAlarmCheckmarkBinding.inflate(layoutInflater)
+    private val binding: DialogSuccessBinding by lazy {
+        DialogSuccessBinding.inflate(layoutInflater)
     }
 
     init {

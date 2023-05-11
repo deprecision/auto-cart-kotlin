@@ -139,15 +139,10 @@ class BwDevice(var activity: Activity){
                             gatt.writeDescriptor(descriptor)
                             delay(500)
 
-                            //set password (0x60 = set pairing password)
-                            val password = "9C 60 00 04 C9 A9 38 38 38 38 38".replace(" ", "")
-                            writeCharacteristicCurrent(password)
-                            Log.i(TAG, "Verify Password. ")
+                            setPassword()
                             delay(500)
 
-                            //set time disconnect. (67 = set time disconnect, FE = time is unlimited) set one time.
-                            val cmdSetTimeDisconnect = "9C 67 00 01 C9 CB FE".replace(" ", "")
-                            writeCharacteristicCurrent(cmdSetTimeDisconnect)
+                            setTimeDisconnect()
                             delay(1000)
 
                             //check status of logger
@@ -195,6 +190,18 @@ class BwDevice(var activity: Activity){
             super.onDescriptorWrite(gatt, descriptor, status)
             Log.i(TAG, "onDescriptorWrite : ${descriptor.uuid}")
         }
+    }
+    private fun setPassword(){
+        //set password (0x60 = set pairing password)
+        val password = "9C 60 00 04 C9 A9 38 38 38 38 38".replace(" ", "")
+        writeCharacteristicCurrent(password)
+        Log.i(TAG, "Verify Password. ")
+    }
+
+    private fun setTimeDisconnect(){
+        //set time disconnect. (67 = set time disconnect, FE = time is unlimited) set one time.
+        val cmdSetTimeDisconnect = "9C 67 00 01 C9 CB FE".replace(" ", "")
+        writeCharacteristicCurrent(cmdSetTimeDisconnect)
     }
 
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
