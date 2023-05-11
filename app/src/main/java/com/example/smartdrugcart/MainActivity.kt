@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -231,6 +232,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun showInputDialog(){
+
         inputHNDialog = InputHNDialog(this, barcodeForResult)
         inputHNDialog!!.setEvent { hn->
             setPay(hn)

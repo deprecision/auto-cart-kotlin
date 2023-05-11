@@ -252,7 +252,6 @@ class RegisterActivity : AppCompatActivity() {
             }
             Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
         }
-
     }
     private fun hideUnlockDialog(){
         unlockDialog?.dismiss()

@@ -145,6 +145,10 @@ class BwDevice(var activity: Activity){
                             setTimeDisconnect()
                             delay(1000)
 
+                            if(lastPosition != -1){
+                                checkStatusLockerAll()
+                            }
+
                             //check status of logger
 //                            val handler = Handler(Looper.getMainLooper())
 //                            handler.postDelayed(object : Runnable{
@@ -264,6 +268,10 @@ class BwDevice(var activity: Activity){
     }
 
     private fun writeCharacteristicCurrent(str: String){
+        if(gatt == null){
+            Toast.makeText(activity, "Gatt disconnect", Toast.LENGTH_SHORT).show()
+            return
+        }
         val command = Hex.decodeHex(str.replace(" ", "").toCharArray())
         try {
             if (Build.VERSION.SDK_INT >= 33) {
