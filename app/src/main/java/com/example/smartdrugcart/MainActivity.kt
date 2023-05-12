@@ -45,6 +45,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        Log.i(TAG, "onCreate")
 
         //DD:65:0C:D3:9A:02
 
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         bwDevice.connect()
 
         Log.i(TAG, "onResume")
+
     }
 
     override fun onDestroy() {
@@ -130,6 +132,7 @@ class MainActivity : AppCompatActivity() {
         binding.stateDeviceTV.setTextColor(ContextCompat.getColor(this, R.color.colorRed))
         binding.stateDeviceIV.setColorFilter(ContextCompat.getColor(this, R.color.colorRed), PorterDuff.Mode.SRC_ATOP)
 
+        lastPosition = prefs.intLastPosition
         showDisconnectDialog()
     }
 
@@ -211,15 +214,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun openRegister(){
-        val countHn = drawer1List.count { it.hn != null }
-        if(countHn == 0){
-            showInputUserDialog()
-        }else{
-            //Toast.makeText(this, "Please dispense all the medicine.", Toast.LENGTH_SHORT).show()
-            val snackbar = Snackbar.make(binding.root, "Please dispense all the medicine.", Snackbar.LENGTH_LONG)
-            snackbar.show()
-
-        }
+        showInputUserDialog()
     }
 
     private var inputHNDialog: InputHNDialog? = null

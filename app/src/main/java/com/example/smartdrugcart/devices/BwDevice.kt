@@ -69,10 +69,6 @@ class BwDevice(var activity: Activity){
         gatt = device!!.connectGatt(activity, true, gattCallback)
     }
 
-    fun isConnect(): Boolean{
-        return gatt != null
-    }
-
     private var lastPosition = -1
     private var lastDrawerAt = -1
     private var currentCmd = ""
@@ -87,6 +83,8 @@ class BwDevice(var activity: Activity){
         lastDrawerAt = drawerAt
         currentCmd = cmd
 
+        Log.i(TAG, "position: ${position}")
+
         writeCharacteristicCurrent(currentCmd)
     }
 
@@ -97,6 +95,7 @@ class BwDevice(var activity: Activity){
     fun destroy(){
         gatt?.close()
         gatt = null
+        lastPosition = -1
     }
 
     private val gattCallback = object : BluetoothGattCallback() {
@@ -269,7 +268,10 @@ class BwDevice(var activity: Activity){
 
     private fun writeCharacteristicCurrent(str: String){
         if(gatt == null){
-            Toast.makeText(activity, "Gatt disconnect", Toast.LENGTH_SHORT).show()
+            val rootView: View = activity.window.decorView.rootView
+            rootView.post {
+                Toast.makeText(activity, "Gatt disconnect", Toast.LENGTH_SHORT).show()
+            }
             return
         }
         val command = Hex.decodeHex(str.replace(" ", "").toCharArray())

@@ -19,4 +19,9 @@ class Prefs (private var context: Context) {
         get() = preferences.getString(APP_PREF_STR_INIT_LOCKER, null)
         set(value) = preferences.edit().putString(APP_PREF_STR_INIT_LOCKER, value).apply()
 
+    private val APP_PREF_INT_LASTPOSITION = "intLastPosition"
+    var intLastPosition: Int
+        get() = preferences.getInt(APP_PREF_INT_LASTPOSITION, -1)
+        set(value) = preferences.edit().putInt(APP_PREF_INT_LASTPOSITION, value).apply()
+
 }
