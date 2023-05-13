@@ -29,7 +29,7 @@
                 app:cardPreventCornerOverlap="false"
                 app:cardElevation="0dp"
                 app:cardBackgroundColor="@color/colorBackground"
-                app:cardCornerRadius="50dp"
+                app:cardCornerRadius="30dp"
                 android:layout_alignParentRight="true"
                 android:layout_margin="15dp"
                 >

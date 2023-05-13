@@ -234,6 +234,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun showInputDialog(){
 
         inputHNDialog = InputHNDialog(this, barcodeForResult)
@@ -292,11 +293,14 @@ class MainActivity : AppCompatActivity() {
     private fun setPay(hn: String?){
 
         if(hn == null){
-            Toast.makeText(this, "Please enter hn number", Toast.LENGTH_SHORT).show()
+            inputHNDialog!!.setShowErrorInput(true, "*Please enter HN number.")
+            Toast.makeText(this, "Please enter HN number", Toast.LENGTH_SHORT).show()
+
             return
         }
 
         if(hn.isBlank()){
+            inputHNDialog!!.setShowErrorInput(true, "*Please enter HN number.")
             Toast.makeText(this, "Please enter hn number", Toast.LENGTH_SHORT).show()
             return
         }
@@ -310,6 +314,7 @@ class MainActivity : AppCompatActivity() {
             bwDevice.sendCommand(locker.position!!.toInt(), locker.drawerAt!!.toInt(), locker.cmdUnlock!!)
             showOpeningDialog()
         }else{
+            inputHNDialog!!.setShowErrorInput(true, "Not found")
             Toast.makeText(this, "Not found", Toast.LENGTH_SHORT).show()
         }
 
@@ -371,8 +376,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     UnlockDialog.EVENT_DISABLE->{
                         Log.i("fewfwe", "EVENT_DISABLE")
-                        drawer1List[lastPosition].hn = null
-                        drawer1List[lastPosition].counter = 0
+//                        drawer1List[lastPosition].hn = null
+//                        drawer1List[lastPosition].counter = 0
                         drawer1List[lastPosition].state = KEY_DISABLE
                         functions.update(drawer1List[lastPosition])
 

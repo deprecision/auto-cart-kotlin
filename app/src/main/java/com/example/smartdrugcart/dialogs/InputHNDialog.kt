@@ -26,13 +26,15 @@ class InputHNDialog(private var activity: Activity, private var barcodeForResult
         this.l = l
     }
 
-    fun setShowErrorInput(isShow: Boolean){
+    fun setShowErrorInput(isShow: Boolean, message:String){
         when(isShow){
             true->{
                 binding.messageTV.visibility = View.VISIBLE
+                binding.messageTV.text = message
             }
             false->{
                 binding.messageTV.visibility = View.GONE
+                binding.messageTV.text = message
             }
         }
     }

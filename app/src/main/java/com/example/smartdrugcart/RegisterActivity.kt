@@ -197,13 +197,14 @@ class RegisterActivity : AppCompatActivity() {
     private fun setRegisterLocker(hn: String){
         if (hn.isBlank()) {
             Toast.makeText(this, "Please enter HN number", Toast.LENGTH_SHORT).show()
+            inputHNDialog!!.setShowErrorInput(true, "*Please enter HN number.")
             return
         }
 
         //OPEN DRAWER
         if(drawer1List.any { it.hn == hn }){
             Toast.makeText(this, "This HN number already exists.", Toast.LENGTH_SHORT).show()
-            inputHNDialog!!.setShowErrorInput(true)
+            inputHNDialog!!.setShowErrorInput(true, "*This HN number already exists.")
             return
         }
 
@@ -272,8 +273,8 @@ class RegisterActivity : AppCompatActivity() {
 
                     UnlockDialog.EVENT_DISABLE->{
                         Log.i("fewfwe", "EVENT_DISABLE")
-                        drawer1List[lastPosition].hn = null
-                        drawer1List[lastPosition].counter = 0
+//                        drawer1List[lastPosition].hn = null
+//                        drawer1List[lastPosition].counter = 0
                         drawer1List[lastPosition].state = KEY_DISABLE
                         functions.update(drawer1List[lastPosition])
 
