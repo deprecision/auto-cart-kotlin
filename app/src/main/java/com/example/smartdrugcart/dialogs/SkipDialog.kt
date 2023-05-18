@@ -4,18 +4,18 @@ import android.app.ActionBar
 import android.app.Activity
 import android.app.Dialog
 import android.view.Window
-import com.example.smartdrugcart.databinding.DialogDisableBinding
+import com.example.smartdrugcart.databinding.DialogSkipBinding
 import com.example.smartdrugcart.models.ModelLocker
 
-class DisableDialog(private var activity: Activity): Dialog(activity) {
+class SkipDialog(private var activity: Activity): Dialog(activity) {
 
     companion object{
-        val EVENT_DISABLE = "disable"
+        val EVENT_SKIP = "skip"
         val EVENT_CANCEL = "cancel"
     }
 
-    private val binding: DialogDisableBinding by lazy {
-        DialogDisableBinding.inflate(layoutInflater)
+    private val binding: DialogSkipBinding by lazy {
+        DialogSkipBinding.inflate(layoutInflater)
     }
 
     private var l: ((event: String) -> Unit)? = null
@@ -36,7 +36,7 @@ class DisableDialog(private var activity: Activity): Dialog(activity) {
         }
 
         binding.disableTV.setOnClickListener {
-            l?.let { it(EVENT_DISABLE) }
+            l?.let { it(EVENT_SKIP) }
             dismiss()
         }
     }

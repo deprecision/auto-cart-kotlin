@@ -26,7 +26,7 @@ class DisconnectDialog(private var activity: Activity, private var device: BwDev
         setContentView(binding.root)
         window!!.setBackgroundDrawableResource(android.R.color.transparent)
         window!!.setLayout(ActionBar.LayoutParams.MATCH_PARENT, ActionBar.LayoutParams.WRAP_CONTENT)
-        setCancelable(false) //false
+        setCancelable(true) //false
 
         binding.settingLL.setOnClickListener {
             showPasswordDialog()

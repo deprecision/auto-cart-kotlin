@@ -10,7 +10,7 @@ import com.example.smartdrugcart.models.ModelLocker
 class UnlockDialog(private var activity: Activity): Dialog(activity) {
 
     companion object{
-        val EVENT_DISABLE = "eventDisable"
+        val EVENT_SKIP = "eventSkip"
         val EVENT_SUCCESS = "eventSuccess"
     }
 
@@ -36,12 +36,12 @@ class UnlockDialog(private var activity: Activity): Dialog(activity) {
         }
 
         setOnDismissListener {
-            if(isDisable){
-                l?.let { it(EVENT_DISABLE) }
+            if(isSkip){
+                l?.let { it(EVENT_SKIP) }
             }else{
                 l?.let { it(EVENT_SUCCESS) }
             }
-            isDisable = false
+            isSkip = false
         }
     }
 
@@ -64,14 +64,14 @@ class UnlockDialog(private var activity: Activity): Dialog(activity) {
         binding.subtitleTV.text = description
     }
 
-    private var isDisable = false
+    private var isSkip = false
     private fun showCautionDialog(){
-        val dialog = DisableDialog(activity)
+        val dialog = SkipDialog(activity)
         dialog.setModel(modelLocker!!)
         dialog.setEvent { event ->
             when(event){
-                DisableDialog.EVENT_DISABLE->{
-                    isDisable = true
+                SkipDialog.EVENT_SKIP->{
+                    isSkip = true
                     dismiss()
                 }
             }

@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private val drawer1List = ArrayList<ModelLocker>()
     private val drawer2List = ArrayList<ModelLocker>()
 
-    private var lastPosition = 0
+    private var lastPosition = -1
 
     @SuppressLint("MissingPermission")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +89,10 @@ class MainActivity : AppCompatActivity() {
                     bwDevice.reconnect()
                 }
                 BwDevice.STATE_UNLOCK_LOGGER->{
+                    if(lastPosition == -1){
+                        hideUnlockDialog()
+                        return@setMyEvent
+                    }
                     if(openingDialog?.isShowing == true){
                         hideOpeningDialog()
                     }
@@ -101,6 +105,10 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "Main STATE_UNLOCK_LOGGER")
                 }
                 BwDevice.STATE_LOCK_LOGGER->{
+                    if(lastPosition == -1){
+                        hideUnlockDialog()
+                        return@setMyEvent
+                    }
                     if(openingDialog?.isShowing == true){
                         hideOpeningDialog()
                         //สั่งเปิดเเต่ไม่เปิดลิ้นชัก
@@ -281,6 +289,7 @@ class MainActivity : AppCompatActivity() {
             if(userId == "1234"){
                 val intent = Intent(this, RegisterActivity::class.java)
                 startActivity(intent)
+
                 bwDevice.destroy()
                 inputUserIDDialog!!.dismiss()
                 return@setEvent
@@ -321,21 +330,6 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private var enableDialog: EnableDialog? = null
-    private fun showEnableDialog(){
-        enableDialog = EnableDialog(this)
-        enableDialog!!.setModel(drawer1List[lastPosition])
-        enableDialog!!.setEvent { event ->
-            when(event){
-                EnableDialog.EVENT_ENABLE->{
-                    drawer1List[lastPosition].state = KEY_ENABLE
-                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
-                }
-            }
-        }
-        enableDialog!!.show()
-    }
-
     private fun showClearDialog(position: Int) {
         var dialog = ClearLockerDialog(this)
         dialog.setEvent { event ->
@@ -374,14 +368,17 @@ class MainActivity : AppCompatActivity() {
                         showClearDialog(lastPosition)
                         Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
                     }
-                    UnlockDialog.EVENT_DISABLE->{
+                    UnlockDialog.EVENT_SKIP->{
                         Log.i("fewfwe", "EVENT_DISABLE")
 //                        drawer1List[lastPosition].hn = null
 //                        drawer1List[lastPosition].counter = 0
-                        drawer1List[lastPosition].state = KEY_DISABLE
-                        functions.update(drawer1List[lastPosition])
+                        //drawer1List[lastPosition].state = KEY_DISABLE
+                        //functions.update(drawer1List[lastPosition])
 
-                        binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        //binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        lastPosition = -1
+                        currentPositionVerify = -1
+
                         hideUnlockDialog()
                     }
                 }
@@ -427,10 +424,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private var disableDialog: DisableDialog? = null
+    private var skipDialog: SkipDialog? = null
     private fun showReportDialog(){
-        disableDialog = DisableDialog(this)
-        disableDialog!!.show()
+        skipDialog = SkipDialog(this)
+        skipDialog!!.show()
     }
 
     private var disconnectDialog: DisconnectDialog? = null

@@ -70,6 +70,10 @@ class RegisterActivity : AppCompatActivity() {
                     bwDevice.reconnect()
                 }
                 BwDevice.STATE_UNLOCK_LOGGER->{
+                    if(lastPosition == -1){
+                        hideUnlockDialog()
+                        return@setMyEvent
+                    }
                     if(openingDialog?.isShowing == true){
                         hideOpeningDialog()
                     }
@@ -82,6 +86,10 @@ class RegisterActivity : AppCompatActivity() {
 
                 }
                 BwDevice.STATE_LOCK_LOGGER->{
+                    if(lastPosition == -1){
+                        hideUnlockDialog()
+                        return@setMyEvent
+                    }
                     if(openingDialog?.isShowing == true){
                         hideOpeningDialog()
                         //สั่งเปิดเเต่ไม่เปิดลิ้นชัก
@@ -154,11 +162,6 @@ class RegisterActivity : AppCompatActivity() {
                     lastPosition = position
                     showInputDialog()
                 }
-                AdapterLocker.EVENT_SHOW_ENABLEDIALOG->{
-                    lastDrawerAt = "1"
-                    lastPosition = position
-                    showEnableDialog()
-                }
             }
         }
         binding.drawer1RCV.adapter = adapter
@@ -228,22 +231,21 @@ class RegisterActivity : AppCompatActivity() {
         disconnectDialog?.dismiss()
     }
 
-
-    private var enableDialog: EnableDialog? = null
-    private fun showEnableDialog(){
-        enableDialog = EnableDialog(this)
-        enableDialog!!.setModel(drawer1List[lastPosition])
-        enableDialog!!.setEvent { event ->
-            when(event){
-                EnableDialog.EVENT_ENABLE->{
-                    drawer1List[lastPosition].state = KEY_ENABLE
-                    functions.update(drawer1List[lastPosition])
-                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
-                }
-            }
-        }
-        enableDialog!!.show()
-    }
+//    private var enableDialog: EnableDialog? = null
+//    private fun showEnableDialog(){
+//        enableDialog = EnableDialog(this)
+//        enableDialog!!.setModel(drawer1List[lastPosition])
+//        enableDialog!!.setEvent { event ->
+//            when(event){
+//                EnableDialog.EVENT_ENABLE->{
+//                    drawer1List[lastPosition].state = KEY_ENABLE
+//                    functions.update(drawer1List[lastPosition])
+//                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
+//                }
+//            }
+//        }
+//        enableDialog!!.show()
+//    }
 
 
     private fun showSuccessDialog(){
@@ -254,10 +256,8 @@ class RegisterActivity : AppCompatActivity() {
     private var currentPositionVerify = -1
     private var unlockDialog: UnlockDialog? = null
     private fun showUnlockDialog(){
+
         val locker = drawer1List[lastPosition]
-        if(locker.state == KEY_DISABLE){
-            return
-        }
 
         if(unlockDialog == null){//init
             unlockDialog = UnlockDialog(this)
@@ -271,14 +271,16 @@ class RegisterActivity : AppCompatActivity() {
                         Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
                     }
 
-                    UnlockDialog.EVENT_DISABLE->{
-                        Log.i("fewfwe", "EVENT_DISABLE")
+                    UnlockDialog.EVENT_SKIP->{
+                        Log.i("fewfwe", "EVENT_SKIP")
 //                        drawer1List[lastPosition].hn = null
 //                        drawer1List[lastPosition].counter = 0
-                        drawer1List[lastPosition].state = KEY_DISABLE
-                        functions.update(drawer1List[lastPosition])
+                        //drawer1List[lastPosition].state = KEY_DISABLE
+                        //functions.update(drawer1List[lastPosition])
 
-                        binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        //binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
+                        lastPosition = -1
+                        currentPositionVerify = -1
                         hideUnlockDialog()
                     }
                 }
