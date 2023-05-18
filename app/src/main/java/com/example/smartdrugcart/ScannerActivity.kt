@@ -36,7 +36,6 @@ class ScannerActivity : AppCompatActivity() {
 
     private val binding: ActivityScannerBinding by lazy {
         ActivityScannerBinding.inflate(layoutInflater)//
-        
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
