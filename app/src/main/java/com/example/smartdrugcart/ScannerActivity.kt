@@ -35,7 +35,8 @@ class ScannerActivity : AppCompatActivity() {
     private var cameraProvider: ProcessCameraProvider? = null
 
     private val binding: ActivityScannerBinding by lazy {
-        ActivityScannerBinding.inflate(layoutInflater)
+        ActivityScannerBinding.inflate(layoutInflater)//
+        
     }
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
