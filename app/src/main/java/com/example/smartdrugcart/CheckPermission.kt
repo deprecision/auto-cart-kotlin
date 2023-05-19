@@ -31,7 +31,7 @@ class CheckPermission : AppCompatActivity() {
         setContentView(binding.root)
         prefs = Prefs(this)
 
-        Glide.with(this).asGif().load(R.drawable.ic_app_gif).into(binding.iconAppIV)
+        //Glide.with(this).asGif().load(R.drawable.ic_app_gif).into(binding.iconAppIV)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             var permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)
