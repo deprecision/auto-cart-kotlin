@@ -10,7 +10,6 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.bumptech.glide.Glide
 import com.example.healthmessage.database.FunctionsLocker
 import com.example.smartdrugcart.databinding.ActivityCheckPermissionBinding
 import com.example.smartdrugcart.helpers.Prefs
@@ -31,7 +30,6 @@ class CheckPermission : AppCompatActivity() {
         setContentView(binding.root)
         prefs = Prefs(this)
 
-        //Glide.with(this).asGif().load(R.drawable.ic_app_gif).into(binding.iconAppIV)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             var permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_SCAN)

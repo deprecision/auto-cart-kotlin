@@ -1,13 +1,10 @@
 package com.example.smartdrugcart
 
-import android.app.Activity
-import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.speech.tts.TextToSpeech
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.healthmessage.database.FunctionsLocker
@@ -16,9 +13,7 @@ import com.example.smartdrugcart.databinding.ActivityRegisterBinding
 import com.example.smartdrugcart.devices.BwDevice
 import com.example.smartdrugcart.dialogs.*
 import com.example.smartdrugcart.models.ModelLocker
-import com.google.android.material.snackbar.Snackbar
 import java.util.*
-import kotlin.concurrent.schedule
 
 
 class RegisterActivity : AppCompatActivity() {
@@ -47,96 +42,69 @@ class RegisterActivity : AppCompatActivity() {
         setFinishOnTouchOutside(false)
 
         init()
-        initTTS()
         addDataList()
         adapter()
 
         event()
+
     }
 
     private fun init(){
+
+        initUnlockDialog()
+        openingDialog = OpeningDialog(this)
 
         functions = FunctionsLocker(this)
         bwDevice = BwDevice(this)
         bwDevice.setMyEvent{ event->
             when(event){
                 BwDevice.STATE_CONNECTED->{
-                    Log.i(TAG, "Register STATE_CONNECTED")
                     hideDisconnectDialog()
                 }
                 BwDevice.STATE_DISCONNECTED->{
-                    Log.i(TAG, "Register STATE_DISCONNECTED")
                     showDisconnectDialog()
                     bwDevice.reconnect()
                 }
-                BwDevice.STATE_UNLOCK_LOGGER->{
-                    if(lastPosition == -1){
-                        hideUnlockDialog()
-                        return@setMyEvent
+                BwDevice.STATE_UNLOCK_LOCKER->{
+                    if(lastPosition == -1) return@setMyEvent
+                    i = 0
+                    hideOpeningDialog()
+
+                    if(unlockDialog.isShowing){
+                        unlockDialog.setTitle("Locker is unlock")
+
+                        if(countUnlock != 0){
+                            countUnlock = 0
+                            Toast.makeText(this, "Please close the drawer completely.", Toast.LENGTH_SHORT).show()
+                        }
+                    }else{
+                        showUnlockDialog(lastPosition)
+                        Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
                     }
-                    if(openingDialog?.isShowing == true){
-                        hideOpeningDialog()
-                    }
-                    showUnlockDialog()
-                    if(currentPositionVerify != -1){
-                        currentPositionVerify = -1   //reset value
-                        speak("Please close the drawer completely.")
-                    }
-                    Log.i(TAG, "Register STATE_UNLOCK_LOGGER")
+
 
                 }
-                BwDevice.STATE_LOCK_LOGGER->{
-                    if(lastPosition == -1){
-                        hideUnlockDialog()
-                        return@setMyEvent
-                    }
-                    if(openingDialog?.isShowing == true){
-                        hideOpeningDialog()
-                        //สั่งเปิดเเต่ไม่เปิดลิ้นชัก
-                        Snackbar.make(binding.root, "Locker is lock.", Toast.LENGTH_LONG).show()
-                        return@setMyEvent
-                    }
+                BwDevice.STATE_LOCK_LOCKER->{
+                    if(lastPosition == -1) return@setMyEvent
 
-                    if(lastPosition == currentPositionVerify){
-                        hideUnlockDialog()
-                        currentPositionVerify = -1 //reset value
-                        Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
-                        Log.i(TAG, "Register STATE_LOCK_LOGGER")
+                    if(openingDialog.isShowing){
+
                     }else{
-                        currentPositionVerify = lastPosition //set for check
+
+                        countUnlock++
                         unlockDialog!!.setTitle("Checking drawer status...")
-                        Timer().schedule(3000) {
-                            Log.i(TAG, "Timer.")
-                            bwDevice.checkStatusLockerAll()
+                        if(countUnlock == 3){
+                            countUnlock = 0
+                            hideUnlockDialog()
+                            updateData()
+                            Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
                         }
-                        Log.i(TAG, "Register STATE_LOCK_LOGGER Checking...")
                     }
                 }
             }
         }
         bwDevice.connect()
 
-    }
-
-    private var textToSpeech: TextToSpeech? = null
-    private fun initTTS(){
-        textToSpeech = TextToSpeech(applicationContext) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = textToSpeech!!.setLanguage(Locale.US)
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("TTS", "Language not supported")
-                }
-                textToSpeech!!.setSpeechRate(0.8f)
-
-            } else {
-                Log.e("TTS", "Initialization failed")
-            }
-        }
-    }
-    private fun speak(text: String){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            textToSpeech!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-        }
     }
 
     private fun event(){
@@ -158,9 +126,11 @@ class RegisterActivity : AppCompatActivity() {
         adapter.setMyEvent { event, position->
             when(event){
                 AdapterLocker.EVENT_SHOW_INPUTDIALOG->{
+
                     lastDrawerAt = "1"
                     lastPosition = position
-                    showInputDialog()
+
+                    showInputDialog(position)
                 }
             }
         }
@@ -176,49 +146,29 @@ class RegisterActivity : AppCompatActivity() {
 
 
     private var inputHNDialog: InputHNDialog? = null
-    private val barcodeRegisterForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-
-            val data: Intent? = result.data
-            if(data != null){
-                val barcode = data.getStringExtra("SCAN_RESULT")
-                inputHNDialog!!.setInputHN(barcode!!)
-                Toast.makeText(this, "Register HN: ${barcode}", Toast.LENGTH_LONG).show()
-            }else{
-                Toast.makeText(this, "Failure", Toast.LENGTH_LONG).show()
-            }
-        }
-    }
-    private fun showInputDialog() {
-        inputHNDialog = InputHNDialog(this, barcodeRegisterForResult)
+    private fun showInputDialog(position: Int) {
+        inputHNDialog = InputHNDialog(this)
         inputHNDialog!!.setEvent { hn ->
-            setRegisterLocker(hn)
+
+            if (hn.isBlank()) {
+                Toast.makeText(this, "Please enter HN number", Toast.LENGTH_SHORT).show()
+                inputHNDialog!!.setShowErrorInput(true, "*Please enter HN number.")
+                return@setEvent
+            }
+            if (drawer1List.any { it.hn == hn }) {
+                Toast.makeText(this, "This HN number already exists.", Toast.LENGTH_SHORT).show()
+                inputHNDialog!!.setShowErrorInput(true, "*This HN number already exists.")
+                return@setEvent
+            }
+
+            lastInputHN = hn
+            showOpeningDialog(position)
+
+            inputHNDialog!!.dismiss()
         }
         inputHNDialog!!.show()
     }
 
-    private fun setRegisterLocker(hn: String){
-        if (hn.isBlank()) {
-            Toast.makeText(this, "Please enter HN number", Toast.LENGTH_SHORT).show()
-            inputHNDialog!!.setShowErrorInput(true, "*Please enter HN number.")
-            return
-        }
-
-        //OPEN DRAWER
-        if(drawer1List.any { it.hn == hn }){
-            Toast.makeText(this, "This HN number already exists.", Toast.LENGTH_SHORT).show()
-            inputHNDialog!!.setShowErrorInput(true, "*This HN number already exists.")
-            return
-        }
-
-        lastInputHN = hn
-        unlockLocker(lastPosition)
-
-        inputHNDialog!!.dismiss()
-        showOpeningDialog()
-
-
-    }
 
     private var disconnectDialog: DisconnectDialog? = null
     private fun showDisconnectDialog(){
@@ -231,97 +181,78 @@ class RegisterActivity : AppCompatActivity() {
         disconnectDialog?.dismiss()
     }
 
-//    private var enableDialog: EnableDialog? = null
-//    private fun showEnableDialog(){
-//        enableDialog = EnableDialog(this)
-//        enableDialog!!.setModel(drawer1List[lastPosition])
-//        enableDialog!!.setEvent { event ->
-//            when(event){
-//                EnableDialog.EVENT_ENABLE->{
-//                    drawer1List[lastPosition].state = KEY_ENABLE
-//                    functions.update(drawer1List[lastPosition])
-//                    binding.drawer1RCV.adapter!!.notifyItemChanged(lastPosition)
-//                }
-//            }
-//        }
-//        enableDialog!!.show()
-//    }
-
-
-    private fun showSuccessDialog(){
-        val dialog = SuccessDialog(this)
-        dialog.show()
-    }
-
-    private var currentPositionVerify = -1
-    private var unlockDialog: UnlockDialog? = null
-    private fun showUnlockDialog(){
-
-        val locker = drawer1List[lastPosition]
-
-        if(unlockDialog == null){//init
-            unlockDialog = UnlockDialog(this)
-            unlockDialog!!.setTitle("Locker is unlock")
-            unlockDialog!!.setDescription("Put the pills in the drawer.")
-            unlockDialog!!.setMyEvent { event ->
-                when(event){
-                    UnlockDialog.EVENT_SUCCESS->{
-                        Log.i("fewfwe", "EVENT_SUCCESS")
-                        updateData()
-                        Toast.makeText(this, "Locker is lock.", Toast.LENGTH_SHORT).show()
-                    }
-
-                    UnlockDialog.EVENT_SKIP->{
-                        Log.i("fewfwe", "EVENT_SKIP")
-//                        drawer1List[lastPosition].hn = null
-//                        drawer1List[lastPosition].counter = 0
-                        //drawer1List[lastPosition].state = KEY_DISABLE
-                        //functions.update(drawer1List[lastPosition])
-
-                        //binding.drawer1RCV.adapter?.notifyItemChanged(lastPosition)
-                        lastPosition = -1
-                        currentPositionVerify = -1
-                        hideUnlockDialog()
-                    }
+    private var countUnlock = 0
+    private lateinit var unlockDialog: UnlockDialog
+    private fun initUnlockDialog(){
+        unlockDialog = UnlockDialog(this)
+        unlockDialog.setTitle("Locker is unlock")
+        unlockDialog.setDescription("Put the pills in the drawer.")
+        unlockDialog.setMyDismiss { event ->
+            when(event){
+                UnlockDialog.EVENT_SKIP->{
+                    lastPosition = -1
+                    countUnlock = 0
+                }
+                else->{
+                    bwDevice.checkStatusLockerAll()
+                    Toast.makeText(this, "Check status locker.", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
+    private fun showUnlockDialog(position: Int){
+        var number = position + 1
+        unlockDialog.setTitle("Locker is unlock")
+        unlockDialog.setNumber(number.toString())
+        unlockDialog.show()
 
-        unlockDialog!!.setTitle("Locker is unlock")
-        if(unlockDialog!!.isShowing){// if showing
-            Timer().schedule(1000) {
-                Log.i(TAG, "Timer.")
-                bwDevice.checkStatusLockerAll()
+        val handler = Handler(Looper.getMainLooper())
+        handler.postDelayed(object : Runnable{
+            override fun run() {
+
+                if(unlockDialog.isShowing){
+                    bwDevice.checkStatusLockerAll()
+                    handler.postDelayed(this, 1000)
+                }
             }
-        }else{ //if not showing
+        }, 1000)
 
-            locker.hn = lastInputHN
-            unlockDialog!!.setModel(locker)
-            unlockDialog!!.show()
-
-            Timer().schedule(1000) {
-                Log.i(TAG, "Register Timer is Check Status Locker")
-                bwDevice.checkStatusLockerAll()
-            }
-            Toast.makeText(this, "Locker is unlock.", Toast.LENGTH_SHORT).show()
-        }
     }
     private fun hideUnlockDialog(){
-        unlockDialog?.dismiss()
+        unlockDialog.dismiss()
     }
 
-    private var openingDialog: OpeningDialog? = null
-    private fun showOpeningDialog(){
-        openingDialog = OpeningDialog(this)
-        openingDialog!!.setModel(drawer1List[lastPosition])
-        openingDialog!!.show()
+    private var i = 0
+    private lateinit var openingDialog: OpeningDialog
+    private fun showOpeningDialog(position: Int){
+        openingDialog.setModel(drawer1List[position])
+        openingDialog.show()
 
-        Timer().schedule(600){
-            bwDevice.checkStatusLockerAll()
-        }
+        val handler = Handler(Looper.getMainLooper())
+        handler.post(object : Runnable{
+            override fun run() {
+
+                if(openingDialog.isShowing){
+
+                    if(i == 3){
+                        i = 0
+                        hideOpeningDialog()
+                        Toast.makeText(this@RegisterActivity, "try again.", Toast.LENGTH_SHORT).show()
+                        return
+                    }
+                    i++
+
+                    unlockLocker(position)
+
+                    Thread.sleep(1000)
+                    bwDevice.checkStatusLockerAll()
+                    handler.postDelayed(this, 1000)
+                }
+            }
+        })
     }
     private fun hideOpeningDialog(){
-        openingDialog?.dismiss()
+        openingDialog.dismiss()
     }
 
     private fun updateData(){

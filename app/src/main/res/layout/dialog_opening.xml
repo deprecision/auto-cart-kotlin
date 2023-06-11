@@ -86,7 +86,7 @@
                     android:textColor="@color/colorGreen"
                     android:textSize="24dp"
                     android:textStyle="bold"
-                    android:text="Opening drawer"/>
+                    android:text="Process"/>
 
             </LinearLayout>
 

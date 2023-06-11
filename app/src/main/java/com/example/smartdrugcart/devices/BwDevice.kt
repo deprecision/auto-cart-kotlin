@@ -1,8 +1,10 @@
 package com.example.smartdrugcart.devices
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.bluetooth.*
 import android.content.Context
-import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -13,14 +15,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.apache.commons.codec.binary.Hex
 import java.util.*
+import kotlin.random.Random
 
+@SuppressLint("MissingPermission")
 class BwDevice(var activity: Activity){
 
     companion object{
         val STATE_CONNECTED = "connected"
         val STATE_DISCONNECTED = "disconnected"
-        val STATE_UNLOCK_LOGGER = "unlock"
-        val STATE_LOCK_LOGGER = "lock"
+        val STATE_UNLOCK_LOCKER = "unlock"
+        val STATE_LOCK_LOCKER = "lock"
 
         val STATE_UNLOCK = "0"
         val STATE_LOCK = "1"
@@ -43,11 +47,31 @@ class BwDevice(var activity: Activity){
 
     private var prefs = Prefs(activity)
 
-    //private val cmdUnlockList = arrayListOf("0200310336", "0201310337", "0202310338", "0203310339", "020431033A")
-    //private val cmdCheckStateList = arrayListOf("-", "0200300335", "0201300336", "0202300337", "0203300338", "0204300339", "020530033A")
-
     private val bluetoothManager: BluetoothManager = activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter = bluetoothManager.adapter
+
+    private var lastPosition = -1
+    private var lastDrawerAt = -1
+    private var currentCmd = ""
+    private val cmdCheckState = "02 F0 32 03 27"  //check state all
+    fun sendCommand(position: Int, drawerAt: Int, cmd: String) {
+
+        if (characteristic == null || gatt == null) {
+            Toast.makeText(activity, "Bluetooth is disconnect", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        lastPosition = position
+        lastDrawerAt = drawerAt
+        currentCmd = cmd
+
+        writeCharacteristicCurrent(currentCmd)
+    }
+
+
+    fun checkStatusLockerAll(){
+        writeCharacteristicCurrent(cmdCheckState)
+    }
 
     fun connect() {
         //DD:65:0C:D3:9A:02
@@ -69,29 +93,6 @@ class BwDevice(var activity: Activity){
         gatt = device!!.connectGatt(activity, true, gattCallback)
     }
 
-    private var lastPosition = -1
-    private var lastDrawerAt = -1
-    private var currentCmd = ""
-    private val cmdCheckState = "02 F0 32 03 27"  //check state all
-    fun sendCommand(position: Int, drawerAt: Int, cmd: String) {
-        if (characteristic == null || gatt == null) {
-            Toast.makeText(activity, "Bluetooth is disconnect", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        lastPosition = position
-        lastDrawerAt = drawerAt
-        currentCmd = cmd
-
-        Log.i(TAG, "position: ${position}")
-
-        writeCharacteristicCurrent(currentCmd)
-    }
-
-    fun checkStatusLockerAll(){
-        writeCharacteristicCurrent(cmdCheckState)
-    }
-
     fun destroy(){
         gatt?.close()
         gatt = null
@@ -102,19 +103,14 @@ class BwDevice(var activity: Activity){
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             val rootView: View = activity.window.decorView.rootView
-            Log.i(TAG, "onConnectionStateChange: $newState")
             rootView.post {
                 when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         gatt?.discoverServices()
                         l?.let { it(STATE_CONNECTED) }
-
-                        Log.i(TAG, "STATE_CONNECTED")
-                        Log.i(TAG, "discoverServices")
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
                         l?.let { it(STATE_DISCONNECTED) }
-                        Log.i(TAG, "STATE_DISCONNECTED")
                     }
                 }
             }
@@ -124,7 +120,7 @@ class BwDevice(var activity: Activity){
             characteristic = gatt!!.getService(UUID_SERVICE).getCharacteristic(UUID_CONTROLLER)
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
-                    Log.i(TAG, "onServicesDiscovered GATT_SUCCESS ")
+
                     try {
                         val scope = CoroutineScope(SupervisorJob())
                         scope.launch {
@@ -148,24 +144,9 @@ class BwDevice(var activity: Activity){
                                 checkStatusLockerAll()
                             }
 
-                            //check status of logger
-//                            val handler = Handler(Looper.getMainLooper())
-//                            handler.postDelayed(object : Runnable{
-//                                override fun run() {
-//                                    if(gatt != null && characteristic != null){ //02 F0 32 03 27
-//                                        val checkAllState = Hex.decodeHex("02 F0 32 03 27".replace(" ", "").toCharArray())
-//                                        characteristic!!.value = checkAllState
-//                                        characteristic!!.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-//                                        gatt.writeCharacteristic(characteristic!!)
-//
-//                                        handler.postDelayed(this, 1000)
-//                                    }
-//                                }
-//                            }, 1000)
-
                         }
                     } catch (e: Exception) {
-                        Log.i(TAG, "ERROR: $e")
+
                     }
                 }
                 else -> Log.w(TAG, "onServicesDiscovered received: $status")
@@ -173,10 +154,8 @@ class BwDevice(var activity: Activity){
         }
 
         override fun onCharacteristicRead(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, status: Int) {
-            Log.i(TAG, "onCharacteristicRead")
             when (status) {
                 BluetoothGatt.GATT_SUCCESS -> {
-                    Log.i(TAG, "onCharacteristicRead status: GATT_SUCCESS")
                     broadcastUpdate(characteristic)
                 }
             }
@@ -184,21 +163,18 @@ class BwDevice(var activity: Activity){
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?) {
             super.onCharacteristicChanged(gatt, characteristic)
-            Log.i(TAG, "onCharacteristicChanged: ")
             broadcastUpdate(characteristic!!)
 
         }
 
         override fun onDescriptorWrite(gatt: BluetoothGatt?, descriptor: BluetoothGattDescriptor, status: Int) {
             super.onDescriptorWrite(gatt, descriptor, status)
-            Log.i(TAG, "onDescriptorWrite : ${descriptor.uuid}")
         }
     }
     private fun setPassword(){
         //set password (0x60 = set pairing password)
         val password = "9C 60 00 04 C9 A9 38 38 38 38 38".replace(" ", "")
         writeCharacteristicCurrent(password)
-        Log.i(TAG, "Verify Password. ")
     }
 
     private fun setTimeDisconnect(){
@@ -208,7 +184,6 @@ class BwDevice(var activity: Activity){
     }
 
     private fun broadcastUpdate(characteristic: BluetoothGattCharacteristic) {
-        Log.i(TAG, "broadcastUpdate : ${characteristic.uuid}")
 
         when (characteristic.uuid) {
             UUID_RESULT -> {
@@ -216,8 +191,6 @@ class BwDevice(var activity: Activity){
                 if (data?.isNotEmpty() == true) {
 
                     val hexString: String = data.joinToString(separator = " ") { String.format("%02X", it) }
-                    Log.i(TAG, "UUID_RESULT data hex: $hexString")
-
                     when("${hexString[0]}${hexString[1]}"){
                         "9C"->{
 
@@ -231,23 +204,18 @@ class BwDevice(var activity: Activity){
                             Log.i(TAG, "binaryNumber: $binaryNumber")
 
                             Log.i(TAG, "lastPosition: $lastPosition")
+                            val rootView: View = activity.window.decorView.rootView
 
                             val statusLocker = binaryNumber[8 - lastPosition].toString()
                             when(statusLocker){
                                 STATE_UNLOCK->{
-                                    Log.i(TAG, "statusCurrentLocker: STATE_UNLOCK")
-
-                                    val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_UNLOCK_LOGGER) }//check value againt
+                                        l?.let { it(STATE_UNLOCK_LOCKER) }//check value againt
                                     }
                                 }
                                 STATE_LOCK->{
-                                    Log.i(TAG, "statusCurrentLocker: STATE_LOCK")
-
-                                    val rootView: View = activity.window.decorView.rootView
                                     rootView.post {
-                                        l?.let { it(STATE_LOCK_LOGGER) }//check value againt
+                                        l?.let { it(STATE_LOCK_LOCKER) }//check value againt
                                     }
                                 }
                             }
@@ -260,7 +228,6 @@ class BwDevice(var activity: Activity){
                 val data: ByteArray? = characteristic.value
                 if (data?.isNotEmpty() == true) {
                     val hexString: String = data.joinToString(separator = " ") { String.format("%02X", it) }
-                    Log.i(TAG, "ValueEmpty: $hexString")
                 }
             }
         }
@@ -274,33 +241,18 @@ class BwDevice(var activity: Activity){
             }
             return
         }
-        val command = Hex.decodeHex(str.replace(" ", "").toCharArray())
+
         try {
-            if (Build.VERSION.SDK_INT >= 33) {
-                gatt!!.writeCharacteristic(
-                    characteristic!!,
-                    command,
-                    BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                )
-            }else{
-                characteristic!!.value = command
-                characteristic!!.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                gatt!!.writeCharacteristic(characteristic)
-            }
+            val command = Hex.decodeHex(str.replace(" ", "").toCharArray())
+            characteristic!!.value = command
+            characteristic!!.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            gatt!!.writeCharacteristic(characteristic)
+
         }catch (e: java.lang.NullPointerException){
             Log.i(TAG, "gatt == null")
         }
     }
 }
-
-//check service
-//val servicesList = gatt!!.services
-//for (s in servicesList){
-//    Log.i(TAG, "service: " + s.uuid)
-//    for (c in s.characteristics){
-//        Log.i(TAG, "c: " + c.uuid)
-//    }
-//}
 
 
 

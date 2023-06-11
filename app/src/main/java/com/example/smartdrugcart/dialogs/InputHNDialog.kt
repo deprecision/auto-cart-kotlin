@@ -11,10 +11,9 @@ import android.view.Window
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.example.smartdrugcart.ScannerActivity
 import com.example.smartdrugcart.databinding.DialogInputHnBinding
 
-class InputHNDialog(private var activity: Activity, private var barcodeForResult: ActivityResultLauncher<Intent>): Dialog(activity) {
+class InputHNDialog(private var activity: Activity): Dialog(activity) {
 
     private val binding: DialogInputHnBinding by lazy {
         DialogInputHnBinding.inflate(layoutInflater)
@@ -39,12 +38,6 @@ class InputHNDialog(private var activity: Activity, private var barcodeForResult
         }
     }
 
-    fun setInputHN(hn: String){
-        binding.inputEDT.setText(hn)
-        val text = binding.inputEDT.text
-        l?.let { it1 -> it1(text.toString()) }
-    }
-
     init {
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         setContentView(binding.root)
@@ -60,21 +53,6 @@ class InputHNDialog(private var activity: Activity, private var barcodeForResult
             val text = binding.inputEDT.text
             l?.let { it1 -> it1(text.toString()) }
         }
-
-        binding.scannerIV.setOnClickListener {
-            barcode()
-        }
-    }
-
-    private fun barcode() {
-        if (ContextCompat.checkSelfPermission(activity, Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED){
-            ActivityCompat.requestPermissions(activity,  arrayOf(Manifest.permission.CAMERA), 1001)
-            return
-        }
-
-        val intent = Intent(activity, ScannerActivity::class.java)
-        barcodeForResult.launch(intent)
-
     }
 
 }

@@ -5,7 +5,6 @@ import android.app.Activity
 import android.app.Dialog
 import android.view.Window
 import com.example.smartdrugcart.databinding.DialogSkipBinding
-import com.example.smartdrugcart.models.ModelLocker
 
 class SkipDialog(private var activity: Activity): Dialog(activity) {
 
@@ -41,9 +40,9 @@ class SkipDialog(private var activity: Activity): Dialog(activity) {
         }
     }
 
-    fun setModel(model: ModelLocker){
+    fun setNumber(number: String){
         //set detail
-        binding.numberTV.text = "No. ${model.position}"
+        binding.numberTV.text = "No. ${number}"
     }
 
 }

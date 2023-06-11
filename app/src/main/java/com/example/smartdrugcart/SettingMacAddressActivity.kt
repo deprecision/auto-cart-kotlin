@@ -49,31 +49,8 @@ class SettingMacAddressActivity : AppCompatActivity() {
 
         }
 
-        binding.scannerIV.setOnClickListener {
-            val intent = Intent(this, ScannerActivity::class.java)
-            barcodeForResult.launch(intent)
-        }
-
         binding.backIV.setOnClickListener {
             finish()
-        }
-    }
-
-    private val barcodeForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-
-            Log.i("daswg3gs", "This is registerForActivityResult.")
-
-            val data: Intent? = result.data
-
-            if(data != null){
-                val barcode = data?.getStringExtra("SCAN_RESULT")
-                binding.inputEDT.setText(barcode)
-
-                Toast.makeText(this, barcode, Toast.LENGTH_LONG).show()
-            }else{
-                Toast.makeText(this, "fail", Toast.LENGTH_LONG).show()
-            }
         }
     }
 
