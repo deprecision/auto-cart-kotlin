@@ -25,7 +25,6 @@ class AdapterLocker(
 
     companion object{
         val EVENT_SHOW_INPUTDIALOG = "showInputDialog"
-        val EVENT_SHOW_ENABLEDIALOG = "showEnableDialog"
     }
 
     private val TAG = "AdapterLogger"
@@ -94,21 +93,11 @@ class AdapterLocker(
                         holder.iconIV.setColorFilter(null)
                         holder.iconIV.setImageDrawable(ContextCompat.getDrawable(activity,R.drawable.ic_pills))
 
-                        holder.hnTV.text = "Ready No.${model.id}"
+                        holder.hnTV.text = "${model.hn}\nNo.${model.id}"
                         holder.hnTV.setTextColor(ContextCompat.getColor(activity, R.color.white))
                         //holder.counterTV.text = "${model.counter} ครั้ง"
                     }
                 }
-            }
-            KEY_DISABLE -> {
-                holder.iconIV.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_box))
-                holder.iconIV.setColorFilter(ContextCompat.getColor(activity, R.color.colorWhiteDark))
-                holder.hnTV.setTextColor(ContextCompat.getColor(activity, R.color.colorWhiteDark))
-                holder.hnTV.text = "Disable No.${model.id}"
-
-                holder.bgCV.setCardBackgroundColor(ContextCompat.getColor(activity, R.color.white))
-                holder.bgCV.cardElevation = 0f
-
             }
             KEY_PAUSE->{
                 holder.iconIV.setColorFilter(ContextCompat.getColor(activity, R.color.colorWhiteDark))
@@ -152,11 +141,7 @@ class AdapterLocker(
                         //holder.counterTV.text = "${model.counter} ครั้ง"
                     }
                 }
-            }
-            KEY_DISABLE -> {
-                holder.iconIV.setColorFilter(ContextCompat.getColor(activity, R.color.colorWhiteDark))
-                holder.hnTV.setTextColor(ContextCompat.getColor(activity, R.color.colorWhiteDark))
-                holder.hnTV.text = "Disable No.${model.id}"
+
             }
             KEY_PAUSE->{
                 holder.iconIV.setColorFilter(ContextCompat.getColor(activity, R.color.colorWhiteDark))
@@ -174,9 +159,6 @@ class AdapterLocker(
                             l?.let { it(EVENT_SHOW_INPUTDIALOG, position) }
                         }
                     }
-                }
-                KEY_DISABLE->{
-                    l?.let { it(EVENT_SHOW_ENABLEDIALOG, position) }
                 }
             }
         }

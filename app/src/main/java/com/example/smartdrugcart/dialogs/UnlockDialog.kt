@@ -10,17 +10,16 @@ import com.example.smartdrugcart.models.ModelLocker
 class UnlockDialog(private var activity: Activity): Dialog(activity) {
 
     companion object{
-        val EVENT_DISABLE = "eventDisable"
-        val EVENT_SUCCESS = "eventSuccess"
+        val EVENT_SKIP = "eventSkip"
     }
 
     private val binding: DialogUnlockBinding by lazy {
         DialogUnlockBinding.inflate(layoutInflater)
     }
 
-    private var modelLocker: ModelLocker? = null
+    private var number: String? = null
     private var l: ((event: String) -> Unit?)? = null
-    fun setMyEvent(l: ((event: String) -> Unit?)){
+    fun setMyDismiss(l: ((event: String) -> Unit?)){
         this.l = l
     }
 
@@ -35,25 +34,19 @@ class UnlockDialog(private var activity: Activity): Dialog(activity) {
             showCautionDialog()
         }
 
+        binding.checkCV.setOnClickListener {
+            l?.let { it("checkstatus") }
+        }
+
         setOnDismissListener {
-            if(isDisable){
-                l?.let { it(EVENT_DISABLE) }
-            }else{
-                l?.let { it(EVENT_SUCCESS) }
-            }
-            isDisable = false
+            dialog?.dismiss()
         }
     }
 
-    fun setModel(model: ModelLocker){
+    fun setNumber(number: String){
         //set detail
-        this.modelLocker = model
-
-        binding.numberTV.text = "No. ${model.position}"
-        binding.hnTV.text = "HN: ${model.hn}"
-        binding.nameTV.text = "Name: is blank"
-        binding.sexTV.text = "Sex: is blank"
-        binding.ageTV.text = "Age: is blank"
+        this.number = number
+        binding.numberTV.text = "No. ${number}"
     }
 
     fun setTitle(title: String){
@@ -64,19 +57,19 @@ class UnlockDialog(private var activity: Activity): Dialog(activity) {
         binding.subtitleTV.text = description
     }
 
-    private var isDisable = false
+    private var dialog: SkipDialog? = null
     private fun showCautionDialog(){
-        val dialog = DisableDialog(activity)
-        dialog.setModel(modelLocker!!)
-        dialog.setEvent { event ->
+        dialog = SkipDialog(activity)
+        dialog!!.setNumber(number!!)
+        dialog!!.setEvent { event ->
             when(event){
-                DisableDialog.EVENT_DISABLE->{
-                    isDisable = true
+                SkipDialog.EVENT_SKIP->{
+                    l?.let { it(EVENT_SKIP) }
                     dismiss()
                 }
             }
         }
-        dialog.show()
+        dialog!!.show()
     }
 
 }

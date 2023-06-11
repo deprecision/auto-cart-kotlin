@@ -59,7 +59,7 @@
         </androidx.cardview.widget.CardView>
 
         <androidx.cardview.widget.CardView
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             app:cardCornerRadius="30dp"
@@ -77,7 +77,7 @@
                     android:id="@+id/titleTV"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Enter the MAC Address or scan the QR code. \nFor ex.12:34:56:78:90:AB"
+                    android:text="Enter the MAC Address.\nFor ex.12:34:56:78:90:AB"
                     android:textColor="@color/black" />
 
                 <LinearLayout
@@ -97,14 +97,6 @@
                         android:hint="12:34:56:78:90:AB"
                         android:inputType="text"
                         android:padding="15dp" />
-
-                    <ImageView
-                        android:id="@+id/scannerIV"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:layout_margin="5dp"
-                        android:background="?attr/selectableItemBackgroundBorderless"
-                        android:src="@drawable/ic_barcode_scanner" />
 
                 </LinearLayout>
 
